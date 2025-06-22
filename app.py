@@ -201,9 +201,57 @@ def _start_adk_web_in_background(adk_port):
         return False
 
 
-# --- API Endpoint 1: Process JSON ---
-@app.route('/process_json', methods=['POST'])
-def process_json():
+# --- API Endpoint 1: Process JSON Single Edit ---
+@app.route('/process_json/single_edit/<id>', methods=['POST'])
+def process_json_single_edit(id):
+    if 'json_file' not in request.files:
+        return jsonify({"error": "No JSON file part in the request"}), 400
+
+    json_file = request.files['json_file']
+    prompt = request.form.get('prompt')
+    param = request.form.get('param', 'root_agent')  # Default to 'root_agent' if not provided
+
+    if json_file.filename == '':
+        return jsonify({"error": "No selected JSON file"}), 400
+
+    if not prompt:
+        return jsonify({"error": "No prompt provided"}), 400
+
+    if json_file:
+        try:
+            # Read the JSON file content
+            json_data_str = json_file.read().decode('utf-8')
+            input_json_data = json.loads(json_data_str)
+
+            # --- Call your custom Gemini agent logic for single edit ---
+            updated_json, context_of_changes = call_single_edit_agent(input_json_data, prompt, param)
+            
+            # Create history directory if it doesn't exist
+            history_dir = "history"
+            if not os.path.exists(history_dir):
+                os.makedirs(history_dir)
+            
+            # Save the updated JSON to a file
+            file_path = os.path.join(history_dir, f"{id}.json")
+            with open(file_path, 'w') as f:
+                # The returned 'context_of_changes' is actually the updated JSON string
+                f.write(context_of_changes)
+
+            return jsonify({
+                "updated_json": json.loads(context_of_changes), # parse string to json
+                "context_of_changes": "JSON processed and saved."
+            }), 200
+
+        except json.JSONDecodeError:
+            return jsonify({"error": "Invalid JSON file format"}), 400
+        except Exception as e:
+            return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    else:
+        return jsonify({"error": "An unexpected error occurred with the file upload"}), 500
+
+# --- API Endpoint 2: Process JSON General ---
+@app.route('/process_json/general/<id>', methods=['POST'])
+def process_json_general(id):
     if 'json_file' not in request.files:
         return jsonify({"error": "No JSON file part in the request"}), 400
 
@@ -222,12 +270,23 @@ def process_json():
             json_data_str = json_file.read().decode('utf-8')
             input_json_data = json.loads(json_data_str)
 
-            # --- Call your custom Gemini agent logic ---
+            # --- Call your custom Gemini agent logic for general ---
             updated_json, context_of_changes = call_general_agent(input_json_data, prompt)
+            
+            # Create history directory if it doesn't exist
+            history_dir = "history"
+            if not os.path.exists(history_dir):
+                os.makedirs(history_dir)
+            
+            # Save the updated JSON to a file
+            file_path = os.path.join(history_dir, f"{id}.json")
+            with open(file_path, 'w') as f:
+                # The returned 'context_of_changes' is actually the updated JSON string
+                f.write(context_of_changes)
 
             return jsonify({
-                "updated_json": updated_json,
-                "context_of_changes": context_of_changes
+                "updated_json": json.loads(context_of_changes), # parse string to json
+                "context_of_changes": "JSON processed and saved."
             }), 200
 
         except json.JSONDecodeError:
@@ -237,8 +296,24 @@ def process_json():
     else:
         return jsonify({"error": "An unexpected error occurred with the file upload"}), 500
 
+# --- API Endpoint 3: Get History ---
+@app.route('/history/<id>', methods=['GET'])
+def get_history(id):
+    history_dir = "history"
+    file_path = os.path.join(history_dir, f"{id}.json")
 
-# --- NEW API Endpoint 2: Retrigger ADK Web Server ---
+    if not os.path.exists(file_path):
+        return jsonify({"error": "History not found for the given ID"}), 404
+    
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while reading the history file: {str(e)}"}), 500
+
+
+# --- API Endpoint 4: Retrigger ADK Web Server ---
 @app.route('/retrigger_adk_web', methods=['POST'])
 def retrigger_adk_web():
     print(f"Received request to retrigger ADK web server on port {ADK_WEB_PORT}.")

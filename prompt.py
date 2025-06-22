@@ -26,6 +26,8 @@ def generate_prompt_single_edit(json, param, instruction):
 
     Do not modify any other lines, spacing, indentation, or trailing commas in the JSON.
 
+    Do not use single quotation marks or apostrophes. Only use double quotation marks.
+
     Do not reorder keys or change formatting.
 
     Do not reformat the JSON or adjust quotes.
@@ -49,6 +51,8 @@ def generate_prompt_general(json, instruction):
 
     Do not modify spacing, indentation, or trailing commas in the JSON.
 
+    Do not use single quotation marks or apostrophes. Only use double quotation marks.
+
     Do not reorder keys or change formatting.
 
     Do not add or remove any fields.
@@ -62,7 +66,7 @@ def generate_prompt_general(json, instruction):
 
 def edit_json_file(data):
     data = json.loads(data)
-    with open("hotels_com_api_agent/prompts.json", "w") as f:
+    with open("hotels_com_api_agent/agent.json", "w") as f:
         json.dump(data, f, indent=4)
 
 def get_new_json_single_edit(input_json, param, instruction):
@@ -74,8 +78,8 @@ def get_new_json_single_edit(input_json, param, instruction):
     edit_json_file(final_response)
     return final_response
 
-def get_new_json_general(input_json, param, instruction):
-    prompt = generate_prompt_general(str(input_json), param, instruction)
+def get_new_json_general(input_json, instruction):
+    prompt = generate_prompt_general(str(input_json), instruction)
     response = get_response(prompt)
     response_lines = response.split('\n')[1:-1] 
     # don't use first and last line, which contains ```json and ```
