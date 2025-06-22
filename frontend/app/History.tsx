@@ -102,7 +102,7 @@ const History: React.FC<HistoryProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isAgentRunning, setIsAgentRunning] = useState(false);
   const [trainQuery, setTrainQuery] = useState("");
-  const [trainIterations, setTrainIterations] = useState("10");
+  const [trainIterations, setTrainIterations] = useState("3");
   const [isTraining, setIsTraining] = useState(false);
 
   const handleNodeClick = (nodeData: TreeNodeDatum) => {
@@ -222,104 +222,107 @@ const History: React.FC<HistoryProps> = ({
         </h2>
         
         <div className={cn("flex flex-col space-y-4 pointer-events-auto", !isLogsOpen && "mr-16")}>
-          <Button
-            className={cn(
-              "text-white",
-              isAgentRunning
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-black hover:bg-gray-900"
-            )}
-            onClick={handleRunAgent}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Starting...
-              </div>
-            ) : isAgentRunning ? (
-              "Agent Running"
-            ) : (
-              "Run Agent"
-            )}
-          </Button>
-          
           {/* Train Your Agent Section */}
-          <div className="p-4 bg-white/90 border border-gray-200 rounded-lg w-64">
-            <h3 className="text-md font-bold text-gray-800 mb-3">
-              Train Your Agent
-            </h3>
-            <div className="space-y-3">
+          <div className="w-72">
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Train Your Agent
+              </h3>
+            </div>
+            <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Query
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Training Query
                 </label>
                 <Input
                   type="text"
                   value={trainQuery}
                   onChange={(e) => setTrainQuery(e.target.value)}
-                  placeholder="Enter training query..."
-                  className="w-full text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                  placeholder="What should your agent learn?"
+                  className="w-full text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  # of Iterations
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Training Rounds
                 </label>
                 <Input
                   type="number"
                   value={trainIterations}
                   onChange={(e) => setTrainIterations(e.target.value)}
-                  placeholder="10"
+                  placeholder="3"
                   min="1"
                   max="100"
-                  className="w-full text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                  className="w-full text-sm"
                 />
               </div>
-              <Button
-                onClick={handleTrainAgent}
-                disabled={isTraining || !trainQuery.trim() || !trainIterations}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-              >
-                {isTraining ? (
-                  <div className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Training...
-                  </div>
-                ) : (
-                  "Start Training"
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleTrainAgent}
+                  disabled={isTraining || !trainQuery.trim() || !trainIterations}
+                  className="flex-1 bg-gray-900 hover:bg-gray-800 text-white"
+                >
+                  {isTraining ? (
+                    <div className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Training...
+                    </div>
+                  ) : (
+                    "Start Training"
+                  )}
+                </Button>
+                <Button
+                  className={cn(
+                    "text-white flex-1",
+                    isAgentRunning
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-black hover:bg-gray-900"
+                  )}
+                  onClick={handleRunAgent}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Starting...
+                    </div>
+                  ) : isAgentRunning ? (
+                    "Agent Running"
+                  ) : (
+                    "Run Agent"
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
