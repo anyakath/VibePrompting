@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
 import os
 import datetime # Used in your original your_gemini_agent_logic example
@@ -6,10 +7,10 @@ import subprocess # For running shell commands
 import platform   # For detecting the operating system
 import time       # For small delays
 
-# Assuming 'prompt.py' exists and contains 'get_new_json'
 from prompt import get_new_json_single_edit, get_new_json_general
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 @app.after_request
 def after_request(response):
@@ -156,7 +157,7 @@ def _kill_process_on_port(port):
             if not pids_output:
                 print(f"  No process found on port {port}.")
                 return True # No process to kill is a success
-            
+
             pids = pids_output.splitlines()
             for pid in pids:
                 print(f"  Attempting to kill PID: {pid} with 'sudo kill -9 {pid}'")
@@ -180,9 +181,9 @@ def _kill_process_on_port(port):
 # --- Helper Function to run ADK web in background ---
 def _start_adk_web_in_background(adk_port):
     print(f"Starting 'adk web' in background on port {adk_port}...")
-    
+
     cmd = f'adk web --port {adk_port}'
-    
+
     creationflags = 0
     is_windows = platform.system() == "Windows"
     if is_windows:
@@ -191,8 +192,8 @@ def _start_adk_web_in_background(adk_port):
     try:
         # Use Popen to run in background and detach.
         # On Windows, close_fds cannot be True when redirecting standard handles.
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
-                                   stdin=subprocess.DEVNULL, close_fds=not is_windows, 
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                   stdin=subprocess.DEVNULL, close_fds=not is_windows,
                                    creationflags=creationflags)
         print(f"  'adk web' process started with PID: {process.pid}")
         return True
@@ -272,12 +273,12 @@ def process_json_general(id):
 
             # --- Call your custom Gemini agent logic for general ---
             updated_json, context_of_changes = call_general_agent(input_json_data, prompt)
-            
+
             # Create history directory if it doesn't exist
             history_dir = "history"
             if not os.path.exists(history_dir):
                 os.makedirs(history_dir)
-            
+
             # Save the updated JSON to a file
             file_path = os.path.join(history_dir, f"{id}.json")
             with open(file_path, 'w') as f:
@@ -304,7 +305,7 @@ def get_history(id):
 
     if not os.path.exists(file_path):
         return jsonify({"error": "History not found for the given ID"}), 404
-    
+
     try:
         with open(file_path, 'r') as f:
             data = json.load(f)
@@ -322,9 +323,9 @@ def retrigger_adk_web():
     kill_success = _kill_process_on_port(ADK_WEB_PORT)
     if not kill_success:
         print("  Warning: Failed to kill existing ADK web process, attempting restart anyway.")
-    
+
     # Give a tiny moment for the port to free up if a process was just killed
-    time.sleep(1) 
+    time.sleep(1)
 
     # 2. Start new ADK web server process
     start_success = _start_adk_web_in_background(ADK_WEB_PORT)

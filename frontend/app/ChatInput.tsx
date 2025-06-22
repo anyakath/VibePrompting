@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -15,18 +15,20 @@ import {
 interface ChatInputProps {
   selectedNode: string;
   onSendMessage: (message: string) => void;
+  isProcessing?: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
   selectedNode,
   onSendMessage,
+  isProcessing = false,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedOption, setSelectedOption] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isProcessing) return;
     onSendMessage(inputValue);
     setInputValue("");
   };
@@ -43,14 +45,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Enter node name..."
+          placeholder={isProcessing ? "Loading..." : "Enter node name..."}
           className="flex-1 bg-background/50 border-border/50 focus:border-ring focus:ring-ring/20 transition-all duration-200"
+          disabled={isProcessing}
         />
         <Button
           type="submit"
           size="icon"
           className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md"
-          disabled={!inputValue.trim()}
+          disabled={!inputValue.trim() || isProcessing}
         >
           <Send className="h-4 w-4" />
         </Button>
@@ -75,4 +78,4 @@ const ChatInput: React.FC<ChatInputProps> = ({
   );
 };
 
-export default ChatInput; 
+export default ChatInput;
