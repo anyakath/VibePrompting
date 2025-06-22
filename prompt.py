@@ -67,7 +67,7 @@ def generate_prompt_general(json, instruction):
 def edit_json_file(data):
     data = json.loads(data)
     with open("hotels_com_api_agent/prompts.json", "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f, indent=2)
 
 def get_new_json_single_edit(input_json, param, instruction):
     prompt = generate_prompt_single_edit(str(input_json), param, instruction)
