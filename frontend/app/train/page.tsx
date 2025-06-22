@@ -54,16 +54,41 @@ export default function AppPage() {
     if (!sessionId) return;
     const nodeData = findNodeByName(orgChart, selectedNode);
     if (!nodeData || !nodeData.id) return;
+    
     // Don't fetch for root node
     if (nodeData.id === "root_node") {
       setSelectedNodeJson(AgentContent);
+      // Update agent.json with root content
+      updateAgentJsonFile(AgentContent);
       return;
     }
+    
     fetch(`http://localhost:5000/history/${sessionId}/${nodeData.id}`)
       .then((res) => res.json())
-      .then((data) => setSelectedNodeJson(data))
-      .catch(() => setSelectedNodeJson({ error: "Failed to load JSON" }));
+      .then((data) => {
+        setSelectedNodeJson(data);
+        // Update agent.json with the fetched data
+        updateAgentJsonFile(data);
+      })
+      .catch(() => {
+        setSelectedNodeJson({ error: "Failed to load JSON" });
+      });
   }, [selectedNode, sessionId, orgChart]);
+
+  // Function to update the agent.json file
+  const updateAgentJsonFile = async (jsonData: any) => {
+    try {
+      await fetch("http://localhost:5000/update_agent_json", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ json_data: jsonData }),
+      });
+    } catch (error) {
+      console.error("Error updating agent.json file:", error);
+    }
+  };
 
   useEffect(() => {
     if (showOverlay) {
