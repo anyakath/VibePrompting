@@ -104,17 +104,28 @@ const History: React.FC<HistoryProps> = ({
     setSelectedNode(nodeData.name);
   };
 
+  const handleRunAgent = async () => {
+    try {
+      await fetch("http://localhost:5000/retrigger_adk_web", {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Error retriggering agent:", error);
+    }
+  };
+
   return (
     <div className="w-full h-full relative">
       {/* Enhanced header */}
       <div 
         className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10"
       >
-        <div className="flex flex-col gap-1">
-          <h2 className="text-xl font-semibold text-foreground">Booking Agent</h2>
-        </div>
-        <div className={cn("flex items-center gap-3", !isLogsOpen && "mr-15")}>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md">
+        <h2 className="text-lg font-semibold text-gray-900">Booking Agent</h2>
+        <div className={cn(!isLogsOpen && "mr-15")}>
+          <Button
+            className="bg-gray-900 text-white hover:bg-gray-800"
+            onClick={handleRunAgent}
+          >
             Run Agent
           </Button>
         </div>
@@ -216,3 +227,7 @@ const History: React.FC<HistoryProps> = ({
 };
 
 export default History;
+function handleRunAgent(event: MouseEvent<HTMLButtonElement, MouseEvent>): void {
+  throw new Error("Function not implemented.");
+}
+
