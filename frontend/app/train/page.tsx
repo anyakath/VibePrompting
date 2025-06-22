@@ -102,7 +102,7 @@ export default function AppPage() {
         return addChildToNodeByName(
           prevChart,
           selectedNode,
-          inputValue.trim(),
+          result.node_name || inputValue.trim(),
           newNodeId,
           undefined,
           result.updated_json ? JSON.parse(result.updated_json) : result
@@ -112,11 +112,13 @@ export default function AppPage() {
         ...prev,
         {
           id: Date.now().toString(),
-          content: `Node \"${inputValue.trim()}\" added with ID: ${newNodeId}`,
+          content: `Node \"${
+            result.node_name || inputValue.trim()
+          }\" added with ID: ${newNodeId}`,
           sender: "system",
         },
       ]);
-      setSelectedNode(inputValue.trim());
+      setSelectedNode(result.node_name || inputValue.trim());
       setNodeCounter((n) => n + 1);
     } catch (error) {
       setMessages((prev) => [
