@@ -37,8 +37,9 @@ const renderCustomNode = ({
     />
     <text
       strokeWidth="0"
-      x="25"
-      dy=".35em"
+      x="0"
+      y="35"
+      textAnchor="middle"
       className="text-sm fill-current text-gray-800"
     >
       {nodeDatum.name}
@@ -71,10 +72,9 @@ const History: React.FC<HistoryProps> = ({
           data={orgChart}
           orientation="horizontal"
           translate={{ x: 100, y: 250 }}
-          zoomable={true}
-          draggable={true}
           collapsible={false}
           scaleExtent={{ min: 0.1, max: 4 }}
+          separation={{ siblings: 0.8, nonSiblings: 1.2 }}
           renderCustomNodeElement={(rd3tProps) =>
             renderCustomNode({
               ...rd3tProps,

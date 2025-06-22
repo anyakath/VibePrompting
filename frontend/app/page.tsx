@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import Logs from "@/app/Logs";
 import History from "@/app/History";
 import { Message, OrgChartNode } from "@/lib/types";
-import PromptEditor from "@/app/PromptEditor";
+import AgentEditor from "@/app/AgentEditor";
 import { Button } from "@/components/ui/button";
 import { addChildToNodeByName, findNodeByName } from "@/lib/utils";
 import ChatInput from "@/app/ChatInput";
@@ -17,28 +17,11 @@ import {
 
 export default function Home() {
   const [orgChart, setOrgChart] = useState<OrgChartNode>({
-    name: "CEO",
-    children: [
-      {
-        name: "Manager",
-        attributes: {
-          Department: "Production",
-          bread: "Yes",
-        },
-        children: [],
-      },
-      {
-        name: "Another Manager",
-        attributes: {
-          Department: "Production",
-          bread: "Yes",
-        },
-        children: [],
-      },
-    ],
+    name: "Booking Agent V1",
+    children: [],
   });
 
-  const [selectedNode, setSelectedNode] = useState<string>("CEO");
+  const [selectedNode, setSelectedNode] = useState<string>("Booking Agent V1");
   const [isLogsOpen, setIsLogsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const logsPanelRef = useRef<ImperativePanelHandle>(null);
@@ -102,7 +85,7 @@ export default function Home() {
                   onSendMessage={handleAddNode}
                 />
                 <div className="flex-1 min-h-0">
-                  <PromptEditor />
+                  <AgentEditor />
                 </div>
               </div>
             </Panel>
