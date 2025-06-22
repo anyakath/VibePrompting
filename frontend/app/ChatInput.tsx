@@ -34,7 +34,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <div className="p-6 border-b border-border/50 bg-card/30">
       <div className="mb-3">
-        <h3 className="text-sm font-medium text-foreground">Generate New Prompts</h3>
+        <h3 className="text-lg font-bold text-foreground">Generate New Prompts</h3>
         <p className="text-xs text-muted-foreground mt-1">
           Build off of: <span className="font-medium text-primary">{selectedNode}</span>
         </p>
