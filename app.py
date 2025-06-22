@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import json
 from werkzeug.utils import secure_filename
 import os
+from prompt import get_new_json
 
 app = Flask(__name__)
 
@@ -23,7 +24,8 @@ def your_gemini_agent_logic(input_json_data, prompt):
         tuple: (updated_json_data (dict), context_of_changes (str))
     """
     updated_json_data = input_json_data.copy()
-    context_of_changes = ""
+    context_of_changes = get_new_json(input_json_data, "root_agent", prompt)
+    # TODO: need to take in param to edit
 
     # Example: Modify JSON based on a simple prompt
     if "add_timestamp" in prompt.lower():

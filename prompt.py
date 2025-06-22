@@ -34,3 +34,10 @@ def generate_prompt(json, param, instruction):
     """
 
     return prompt
+
+def get_new_json(input_json, param, instruction):
+    prompt = generate_prompt(str(input_json), param, instruction)
+    response = get_response(prompt)
+    response_lines = response.split('\n')[1:-1] 
+    # don't use first and last line, which contains ```json and ```
+    return '\n'.join(response_lines)
