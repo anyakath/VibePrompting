@@ -20,17 +20,20 @@ Transform your Google ADK agents with intelligent prompting and dynamic conversa
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd BerkeleyAI
 ```
 
 2. Install backend dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 3. Install frontend dependencies:
+
 ```bash
 cd frontend
 npm install
@@ -38,12 +41,14 @@ npm install
 
 ### Running the Application
 
-1. Start the Flask backend:
+1. Start the Flask backend (from the project root):
+
 ```bash
 python app.py
 ```
 
-2. Start the Next.js frontend:
+2. Start the Next.js frontend (from the frontend folder):
+
 ```bash
 cd frontend
 npm run dev
@@ -70,23 +75,55 @@ The application accepts ZIP files containing Google ADK agent folders. The uploa
 ## API Endpoints
 
 - `POST /upload_agent` - Upload Google ADK agent ZIP file
-- `POST /process_json/single_edit/<id>` - Process JSON with single edit mode
-- `POST /process_json/general/<id>` - Process JSON with general mode
-- `GET /history/<id>` - Retrieve processing history
+- `POST /process_json/general/<session_id>/<node_id>` - Process JSON
+- `GET /history/<session_id>/<node_id>` - Retrieve processing history
 - `POST /retrigger_adk_web` - Restart ADK web server
 
 ## Project Structure
 
 ```
-├── app.py                 # Flask backend server
-├── prompt.py             # Prompt processing logic
-├── requirements.txt      # Python dependencies
-├── uploads/             # Uploaded agent files
-├── history/             # Processing history
-└── frontend/            # Next.js frontend
-    ├── app/             # App router pages
-    ├── components/      # UI components
-    └── lib/             # Utilities and types
+BerkeleyAI/
+├── app.py                      # Flask backend server
+├── prompt.py                   # Prompt processing logic
+├── requirements.txt            # Python dependencies
+├── uploads/                    # Uploaded agent files
+├── history/                    # Processing history (per session)
+├── hotels_com_api_agent/       # Example agent implementation
+│   ├── __init__.py
+│   ├── agent.py
+│   ├── agent.json
+│   └── tools/
+│       ├── get_hotel_details_endpoint.py
+│       ├── search_hotel_destination_endpoint.py
+│       └── search_hotels_endpoint.py
+├── frontend/                   # Next.js frontend
+│   ├── app/                    # App router pages and layout
+│   │   ├── layout.tsx
+│   │   ├── globals.css
+│   │   ├── page.tsx
+│   │   ├── landing.tsx
+│   │   ├── History.tsx
+│   │   ├── AgentEditor.tsx
+│   │   ├── ChatInput.tsx
+│   │   ├── Logs.tsx
+│   │   └── train/
+│   ├── components/             # UI components
+│   │   └── ui/
+│   │       ├── button.tsx
+│   │       ├── input.tsx
+│   │       ├── scroll-area.tsx
+│   │       └── select.tsx
+│   ├── lib/                    # Utilities and types
+│   │   ├── agent.json
+│   │   ├── types.ts
+│   │   └── utils.ts
+│   ├── public/                 # Static assets (if any)
+│   ├── package.json            # Frontend dependencies
+│   ├── tsconfig.json           # TypeScript config
+│   └── ... (other config files)
+├── __init__.py
+├── adk                         # (ADK integration stub)
+└── .venv/                      # (optional, for Python virtual environment)
 ```
 
 ## Technologies Used
@@ -95,3 +132,7 @@ The application accepts ZIP files containing Google ADK agent folders. The uploa
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **UI**: Tailwind CSS, Radix UI
 - **Agent Framework**: Google ADK
+
+---
+
+For more details, see the `frontend/README.md` for frontend-specific development and customization notes.
