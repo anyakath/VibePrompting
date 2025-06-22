@@ -36,17 +36,27 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <div className="p-6 bg-transparent" style={{ backgroundColor: "transparent !important", background: "transparent !important" }}>
       <div className="mb-3">
-        <h3 className="text-lg font-bold text-foreground">Generate New Prompts</h3>
+        <h3 className="text-sm font-medium text-foreground">
+          Generate New Prompts
+        </h3>
         <p className="text-xs text-muted-foreground mt-1">
-          Build off of: <span className="font-medium text-primary">{selectedNode}</span>
+          Build off of:{" "}
+          <span className="font-medium text-primary">{selectedNode}</span>
         </p>
       </div>
       <form className="flex gap-3" onSubmit={handleSubmit}>
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+<<<<<<< HEAD
           placeholder={isProcessing ? "Loading..." : "Enter node name..."}
           className="flex-1 border-border/50 focus:border-ring focus:ring-ring/20 transition-all duration-200"
+=======
+          placeholder={
+            isProcessing ? "Loading..." : "How should your prompt be adjusted?"
+          }
+          className="flex-1 bg-background/50 border-border/50 focus:border-ring focus:ring-ring/20 transition-all duration-200"
+>>>>>>> f5c055285a084057d5caf85c6c6dae07c08d9b5a
           disabled={isProcessing}
         />
         <Button
@@ -64,6 +74,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             <SelectValue placeholder="Edit Everything..." />
           </SelectTrigger>
           <SelectContent>
+<<<<<<< HEAD
             <SelectItem value="everything" className="cursor-pointer">Edit Everything</SelectItem>
             <SelectItem value="search_destination" className="cursor-pointer">Edit Search Destination Tool</SelectItem>
             <SelectItem value="booking_tool" className="cursor-pointer">Edit Booking Tool</SelectItem>
@@ -71,6 +82,17 @@ const ChatInput: React.FC<ChatInputProps> = ({
             <SelectItem value="agent_1" className="cursor-pointer">Edit Agent 1</SelectItem>
             <SelectItem value="agent_2" className="cursor-pointer">Edit Agent 2</SelectItem>
             <SelectItem value="agent_3" className="cursor-pointer">Edit Agent 3</SelectItem>
+=======
+            <SelectItem value="everything">Edit Everything</SelectItem>
+            <SelectItem value="search_destination">
+              Edit Search Destination Tool
+            </SelectItem>
+            <SelectItem value="booking_tool">Edit Booking Tool</SelectItem>
+            <SelectItem value="payment_tool">Edit Payment Tool</SelectItem>
+            <SelectItem value="agent_1">Edit Agent 1</SelectItem>
+            <SelectItem value="agent_2">Edit Agent 2</SelectItem>
+            <SelectItem value="agent_3">Edit Agent 3</SelectItem>
+>>>>>>> f5c055285a084057d5caf85c6c6dae07c08d9b5a
           </SelectContent>
         </Select>
       </div>
