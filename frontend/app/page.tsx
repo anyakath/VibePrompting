@@ -135,7 +135,7 @@ export default function Home() {
       {!isLogsOpen && (
         <Button
           onClick={expandLogs}
-          className="absolute top-4 right-0 z-10 bg-card text-card-foreground border border-border hover:bg-accent hover:text-accent-foreground rounded-l-lg rounded-r-none px-4 py-2 h-auto cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md"
+          className="absolute top-5.5 right-0 z-10 bg-card text-card-foreground border border-border hover:bg-accent hover:text-accent-foreground rounded-l-lg rounded-r-none px-4 py-2 h-auto cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md"
         >
           Logs
         </Button>

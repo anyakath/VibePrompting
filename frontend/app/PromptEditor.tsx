@@ -57,8 +57,8 @@ const PromptEditor = () => {
           JSON
         </div>
       </div>
-      <div className="rounded-lg border border-border/50 bg-card/50 p-6">
-        <pre className="text-sm leading-relaxed">
+      <div className="rounded-lg border border-border/50 bg-card/50 p-6 overflow-x-auto">
+        <pre className="text-sm leading-relaxed whitespace-pre">
           <code className="text-muted-foreground font-mono">{promptContent}</code>
         </pre>
       </div>
@@ -66,4 +66,4 @@ const PromptEditor = () => {
   );
 };
 
-export default PromptEditor; 
+export default PromptEditor;
