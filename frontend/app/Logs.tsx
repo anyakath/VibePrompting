@@ -3,15 +3,20 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { PanelRightClose, Activity } from "lucide-react";
-import { Message } from "@/lib/types";
+import { Message, OrgChartNode } from "@/lib/types";
+import { findNodeByName } from "@/lib/utils";
 
 interface LogsProps {
+  orgChart: OrgChartNode;
   selectedNode: string;
   toggleLogs: () => void;
   messages: Message[];
 }
 
-const Logs: React.FC<LogsProps> = ({ selectedNode, toggleLogs, messages }) => {
+const Logs: React.FC<LogsProps> = ({ orgChart, selectedNode, toggleLogs, messages }) => {
+  const selectedNodeData = findNodeByName(orgChart, selectedNode);
+  const nodeId = selectedNodeData?.id || 'No ID';
+
   return (
     <div className="w-full flex flex-col h-full bg-card/30">
       <div className="p-4 border-b border-border/50 bg-card/50">
@@ -29,11 +34,19 @@ const Logs: React.FC<LogsProps> = ({ selectedNode, toggleLogs, messages }) => {
             <PanelRightClose className="h-5 w-5" />
           </Button>
         </div>
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">Selected:</span>
-          <span className="font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded text-xs">
-            {selectedNode}
-          </span>
+        <div className="flex flex-col gap-1 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Selected:</span>
+            <span className="font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded text-xs">
+              {selectedNode}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">ID:</span>
+            <span className="font-mono text-xs text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">
+              {nodeId}
+            </span>
+          </div>
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import History from "@/app/History";
 import { Message, OrgChartNode } from "@/lib/types";
 import AgentEditor from "@/app/AgentEditor";
 import { Button } from "@/components/ui/button";
-import { addChildToNodeByName, findNodeByName } from "@/lib/utils";
+import { addChildToNodeByName, findNodeByName, generateNodeId } from "@/lib/utils";
 import ChatInput from "@/app/ChatInput";
 import {
   Panel,
@@ -19,8 +19,10 @@ import { Home, Sparkles } from "lucide-react";
 
 export default function AppPage() {
   const [orgChart, setOrgChart] = useState<OrgChartNode>({
+    id: "root_node",
     name: "Booking Agent V1",
     children: [],
+    jsonData: AgentContent,
   });
 
   const [selectedNode, setSelectedNode] = useState<string>("Booking Agent V1");
@@ -42,8 +44,19 @@ export default function AppPage() {
 
     setIsProcessing(true);
 
+    // Find the selected node to get its JSON data
+    const selectedNodeData = findNodeByName(orgChart, selectedNode);
+    if (!selectedNodeData) {
+      console.error("Selected node not found");
+      setIsProcessing(false);
+      return;
+    }
+
+    // Use the selected node's JSON data as the base, or fall back to AgentContent
+    const baseJsonData = selectedNodeData.jsonData || AgentContent;
+
     // Create a Blob from the JSON data
-    const blob = new Blob([JSON.stringify(AgentContent)], {
+    const blob = new Blob([JSON.stringify(baseJsonData)], {
       type: "application/json",
     });
 
@@ -54,7 +67,7 @@ export default function AppPage() {
 
     try {
       // Make API call to Flask backend with file upload
-      const response = await fetch("http://localhost:5000/process_json/1", {
+      const response = await fetch(`http://localhost:5000/process_json/general/${inputValue}`, {
         method: "POST",
         body: formData,
       });
@@ -65,14 +78,17 @@ export default function AppPage() {
         throw new Error(result.error || "Failed to process prompt");
       }
 
+      // Generate unique ID for the new node
+      const newNodeId = generateNodeId();
+
       // Check if this is the first child before updating the chart
       const targetNode = findNodeByName(orgChart, selectedNode);
       const isFirstChild = targetNode && targetNode.children.length === 0;
 
       // Add a message for the successful API call
       const messageContent = isFirstChild
-        ? `Child node "${inputValue.trim()}" added`
-        : `Branch created and child node "${inputValue.trim()}" added`;
+        ? `Child node "${inputValue.trim()}" added with ID: ${newNodeId}`
+        : `Branch created and child node "${inputValue.trim()}" added with ID: ${newNodeId}`;
 
       setMessages((prev) => [
         ...prev,
@@ -83,8 +99,18 @@ export default function AppPage() {
         },
       ]);
 
+      // Store the generated JSON data from the API response
+      const generatedJsonData = result.json_data || result;
+
       setOrgChart((prevChart) => {
-        return addChildToNodeByName(prevChart, selectedNode, inputValue.trim());
+        return addChildToNodeByName(
+          prevChart, 
+          selectedNode, 
+          inputValue.trim(), 
+          newNodeId,
+          undefined,
+          generatedJsonData
+        );
       });
 
       setSelectedNode(inputValue.trim());
@@ -156,7 +182,7 @@ export default function AppPage() {
               <Panel defaultSize={35} minSize={20} collapsible>
                 <div className="h-full bg-card/50">
                   <div className="h-full overflow-auto scrollbar-thin">
-                    <AgentEditor />
+                    <AgentEditor orgChart={orgChart} selectedNode={selectedNode} />
                   </div>
                 </div>
               </Panel>
@@ -177,6 +203,7 @@ export default function AppPage() {
             order={2}
           >
             <Logs
+              orgChart={orgChart}
               selectedNode={selectedNode}
               toggleLogs={collapseLogs}
               messages={messages}

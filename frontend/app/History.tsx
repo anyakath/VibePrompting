@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { OrgChartNode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { TreeNodeDatum } from "react-d3-tree";
-import { cn } from "@/lib/utils";
+import { cn, truncateText } from "@/lib/utils";
 
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
 
@@ -56,7 +56,7 @@ const renderCustomNode = ({
           fontSize: isSelected ? "14px" : "13px",
         }}
       >
-        {nodeDatum.name}
+        {truncateText(nodeDatum.name, 20)}
       </text>
 
       {/* Main node circle with gradient */}

@@ -8,23 +8,29 @@ export function cn(...inputs: ClassValue[]) {
 
 export function addChild(
   name: string,
-  attributes?: Record<string, string>
+  id: string,
+  attributes?: Record<string, string>,
+  jsonData?: Record<string, unknown>
 ): OrgChartNode {
   return {
+    id,
     name,
     attributes: attributes || {},
     children: [],
+    jsonData,
   };
 }
 
 export function appendChildToOrgChart(
   orgChart: OrgChartNode,
   childName: string,
-  attributes?: Record<string, string>
+  childId: string,
+  attributes?: Record<string, string>,
+  jsonData?: Record<string, unknown>
 ): OrgChartNode {
   return {
     ...orgChart,
-    children: [...orgChart.children, addChild(childName, attributes)],
+    children: [...orgChart.children, addChild(childName, childId, attributes, jsonData)],
   };
 }
 
@@ -47,12 +53,33 @@ export function findNodeByName(
   return null;
 }
 
+// Find a node by ID in the tree (depth-first search)
+export function findNodeById(
+  node: OrgChartNode,
+  targetId: string
+): OrgChartNode | null {
+  if (node.id === targetId) {
+    return node;
+  }
+
+  for (const child of node.children) {
+    const found = findNodeById(child, targetId);
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+}
+
 // Add a child to a specific node by name
 export function addChildToNodeByName(
   orgChart: OrgChartNode,
   targetNodeName: string,
   childName: string,
-  attributes?: Record<string, string>
+  childId: string,
+  attributes?: Record<string, string>,
+  jsonData?: Record<string, unknown>
 ): OrgChartNode {
   const newOrgChart = { ...orgChart };
 
@@ -60,7 +87,7 @@ export function addChildToNodeByName(
     if (node.name === targetNodeName) {
       return {
         ...node,
-        children: [...node.children, addChild(childName, attributes)],
+        children: [...node.children, addChild(childName, childId, attributes, jsonData)],
       };
     }
 
@@ -71,4 +98,17 @@ export function addChildToNodeByName(
   }
 
   return updateNode(newOrgChart);
+}
+
+// Truncate text to specified length with ellipsis
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.slice(0, maxLength) + "...";
+}
+
+// Generate a unique ID for nodes
+export function generateNodeId(): string {
+  return `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }

@@ -291,6 +291,7 @@ export default function LandingPage() {
                     </Button>
                   )}
                 </div>
+
               </div>
 
               {/* Status */}
@@ -344,4 +345,4 @@ export default function LandingPage() {
       </div>
     </div>
   );
-} 
+} } 
