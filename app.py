@@ -1,5 +1,3 @@
-
-
 from flask import Flask, request, jsonify
 import json
 import os
@@ -9,13 +7,20 @@ import platform   # For detecting the operating system
 import time       # For small delays
 
 # Assuming 'prompt.py' exists and contains 'get_new_json'
-# from prompt import get_new_json_single_edit, get_new_json_general
+from prompt import get_new_json_single_edit, get_new_json_general
 
 app = Flask(__name__)
 
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
 # --- Configuration for ADK Web Server ---
 ADK_WEB_PORT = 8000  # Default port for 'adk web'. Adjust if yours is different.
-CONDA_ENV_NAME = "calhacks" # Your Conda environment name
 
 def call_single_edit_agent(input_json_data, prompt, param='root_agent'):
     """
@@ -172,37 +177,23 @@ def _kill_process_on_port(port):
             return False
 
 
-# --- Helper Function to run ADK web in background within Conda env ---
-def _start_adk_web_in_background(conda_env_name, adk_port):
-    print(f"Starting 'adk web' in background for environment '{conda_env_name}' on port {adk_port}...")
+# --- Helper Function to run ADK web in background ---
+def _start_adk_web_in_background(adk_port):
+    print(f"Starting 'adk web' in background on port {adk_port}...")
     
-    # Construct the command to activate conda env and run adk web
-    if platform.system() == "Windows":
-        # On Windows, you typically need to call conda.bat
-        conda_path = os.path.join(os.environ.get("CONDA_PREFIX", ""), "condabin", "conda.bat")
-        if not os.path.exists(conda_path):
-             conda_path = "conda" # Fallback if CONDA_PREFIX isn't set for base or conda.bat is elsewhere
-             print("Warning: Could not find conda.bat via CONDA_PREFIX. Relying on PATH.")
-
-        cmd = f'"{conda_path}" activate {conda_env_name} && adk web --port {adk_port}'
-        creationflags = subprocess.DETACHED_PROCESS # Detach process on Windows
-        shell_arg = True
-    else: # macOS and Linux
-        # Use a non-interactive shell to source conda.sh and then run adk web
-        conda_sh_path = os.path.join(os.environ.get("CONDA_PREFIX", ""), "etc", "profile.d", "conda.sh")
-        if not os.path.exists(conda_sh_path):
-            print("Warning: Could not find conda.sh. Relying on shell's PATH for 'conda'.")
-            cmd = f'conda activate {conda_env_name} && adk web --port {adk_port}'
-        else:
-            cmd = f'bash -c "source {conda_sh_path} && conda activate {conda_env_name} && adk web --port {adk_port}"'
-        
-        creationflags = 0 # Not applicable to Linux/macOS in the same way
-        shell_arg = True # Must use shell=True for `&&` or `source`
+    cmd = f'adk web --port {adk_port}'
+    
+    creationflags = 0
+    is_windows = platform.system() == "Windows"
+    if is_windows:
+        creationflags = subprocess.DETACHED_PROCESS
 
     try:
-        # Use Popen to run in background and detach
-        process = subprocess.Popen(cmd, shell=shell_arg, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
-                                   stdin=subprocess.DEVNULL, close_fds=True, creationflags=creationflags)
+        # Use Popen to run in background and detach.
+        # On Windows, close_fds cannot be True when redirecting standard handles.
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+                                   stdin=subprocess.DEVNULL, close_fds=not is_windows, 
+                                   creationflags=creationflags)
         print(f"  'adk web' process started with PID: {process.pid}")
         return True
     except Exception as e:
@@ -261,7 +252,7 @@ def retrigger_adk_web():
     time.sleep(1) 
 
     # 2. Start new ADK web server process
-    start_success = _start_adk_web_in_background(CONDA_ENV_NAME, ADK_WEB_PORT)
+    start_success = _start_adk_web_in_background(ADK_WEB_PORT)
 
     if start_success:
         return jsonify({
