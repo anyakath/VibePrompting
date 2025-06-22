@@ -54,7 +54,7 @@ export default function AppPage() {
     if (!sessionId) return;
     const nodeData = findNodeByName(orgChart, selectedNode);
     if (!nodeData || !nodeData.id) return;
-    
+
     // Don't fetch for root node
     if (nodeData.id === "root_node") {
       setSelectedNodeJson(AgentContent);
@@ -62,7 +62,7 @@ export default function AppPage() {
       updateAgentJsonFile(AgentContent);
       return;
     }
-    
+
     fetch(`http://localhost:5000/history/${sessionId}/${nodeData.id}`)
       .then((res) => res.json())
       .then((data) => {
