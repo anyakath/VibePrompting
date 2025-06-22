@@ -7,14 +7,19 @@ import { Send } from "lucide-react";
 import { useState } from "react";
 import { Message, OrgChartNode } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { appendChildToOrgChart, addChildToNodeByName } from "@/lib/utils";
+import { addChildToNodeByName } from "@/lib/utils";
 
 interface ChatProps {
   setOrgChart: React.Dispatch<React.SetStateAction<OrgChartNode>>;
-  selectedNode: string | null;
+  selectedNode: string;
+  setSelectedNode: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const Chat: React.FC<ChatProps> = ({ setOrgChart, selectedNode }) => {
+const Chat: React.FC<ChatProps> = ({
+  setOrgChart,
+  selectedNode,
+  setSelectedNode,
+}) => {
   // TODO: Load this from backend
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -39,32 +44,19 @@ const Chat: React.FC<ChatProps> = ({ setOrgChart, selectedNode }) => {
     setMessages([...messages, userMessage]);
 
     // Add the new node to the org chart
-    if (selectedNode) {
-      // Add child to the selected node
-      setOrgChart((prevChart) =>
-        addChildToNodeByName(prevChart, selectedNode, inputValue.trim())
-      );
+    setOrgChart((prevChart) =>
+      addChildToNodeByName(prevChart, selectedNode, inputValue.trim())
+    );
 
-      const systemMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: `Added "${inputValue.trim()}" as a child of "${selectedNode}"`,
-        sender: "system",
-      };
-      setMessages((prev) => [...prev, systemMessage]);
-    } else {
-      // Fallback to adding to root if no node is selected
-      setOrgChart((prevChart) =>
-        appendChildToOrgChart(prevChart, inputValue.trim())
-      );
+    // Set the newly created node as selected
+    setSelectedNode(inputValue.trim());
 
-      const systemMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: `Added "${inputValue.trim()}" to the root level`,
-        sender: "system",
-      };
-      setMessages((prev) => [...prev, systemMessage]);
-    }
-
+    const systemMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      content: `Added "${inputValue.trim()}" as a child of "${selectedNode}"`,
+      sender: "system",
+    };
+    setMessages((prev) => [...prev, systemMessage]);
     setInputValue("");
   };
 
@@ -72,9 +64,7 @@ const Chat: React.FC<ChatProps> = ({ setOrgChart, selectedNode }) => {
     <div className="w-full border-l border-gray-200 flex flex-col h-full">
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold">Fix your agent</h2>
-        {selectedNode && (
-          <p className="text-sm text-gray-600 mt-1">Selected: {selectedNode}</p>
-        )}
+        <p className="text-sm text-gray-600 mt-1">Selected: {selectedNode}</p>
       </div>
 
       <ScrollArea className="flex-1 p-4 min-h-0">
@@ -106,11 +96,7 @@ const Chat: React.FC<ChatProps> = ({ setOrgChart, selectedNode }) => {
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={
-              selectedNode
-                ? `Add child to ${selectedNode}...`
-                : "Type a name to add to root..."
-            }
+            placeholder={`Add child to ${selectedNode}...`}
             className="flex-1"
           />
           <Button type="submit" size="icon" className="bg-black text-white">
