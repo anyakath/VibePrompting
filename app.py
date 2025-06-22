@@ -2,16 +2,14 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import os
-import datetime # Used in your original your_gemini_agent_logic example
 import subprocess # For running shell commands
 import platform   # For detecting the operating system
 import time       # For small delays
 import zipfile    # For handling ZIP files
 import shutil     # For file operations
-import re         # For snake case conversion
 import uuid
 
-from prompt import get_new_json_single_edit, get_new_json_general, summarize_changes
+from prompt import get_new_json_single_edit, get_new_json_general, summarize_changes, rl_prompt
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -232,6 +230,22 @@ def _start_adk_web_in_background(adk_port):
         print(f"  Failed to start 'adk web': {e}")
         return False
 
+def _run_adk_query(query):
+    # Build the command
+    cmd = f"printf '{query}' | adk run hotels_com_api_agent"
+
+    try:
+        # Run the command and capture output
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        output = result.stdout + (result.stderr if result.stderr else '')
+
+        return jsonify({
+            # 'output_file': output_filename,
+            'output': output
+        }), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to run command: {str(e)}'}), 500
+
 
 # --- API Endpoint 1: Process JSON Single Edit ---
 @app.route('/process_json/single_edit/<session_id>/<node_id>', methods=['POST'])
@@ -321,7 +335,11 @@ def process_json_general(session_id, node_id):
             # Summarize the change for node naming
             node_name = summarize_changes(prompt, context_of_changes)
 
-            return updated_json, 200
+            return jsonify({
+                "updated_json": json.dumps(updated_json, indent=2),
+                "context_of_changes": context_of_changes,
+                "node_name": node_name
+            }), 200
 
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid JSON file format"}), 400
@@ -353,19 +371,19 @@ def update_agent_json():
         data = request.get_json()
         if not data or 'json_data' not in data:
             return jsonify({"error": "No JSON data provided"}), 400
-        
+
         # Path to the agent.json file
         agent_json_path = os.path.join("hotels_com_api_agent", "agent.json")
-        
+
         # Write the new JSON data to the file
         with open(agent_json_path, 'w') as f:
             json.dump(data['json_data'], f, indent=2)
-        
+
         return jsonify({
             "status": "success",
             "message": "Agent JSON file updated successfully"
         }), 200
-        
+
     except Exception as e:
         return jsonify({"error": f"An error occurred while updating the agent JSON file: {str(e)}"}), 500
 
@@ -396,6 +414,7 @@ def retrigger_adk_web():
             "message": "Failed to start ADK web server. Check server logs for details."
         }), 500
 
+# --- API Endpoint 5: Create a new session ---
 @app.route('/new_session', methods=['POST'])
 def new_session():
     """
@@ -405,6 +424,43 @@ def new_session():
     session_dir = os.path.join('history', session_id)
     os.makedirs(session_dir, exist_ok=True)
     return jsonify({"session_id": session_id}), 200
+
+# --- API Endpoint 6: RL to loop ADK Query and Save Output ---
+@app.route("/rl", methods=["POST"])
+def rl():
+    data = request.get_json()
+    query = data.get('query')
+    if not query:
+        return jsonify({'error': 'No query provided'}), 400
+
+    agent_json_path = os.path.join('hotels_com_api_agent', 'agent.json')
+
+    # 1. Read current agent.json
+    with open(agent_json_path, 'r') as f:
+        agent_json = json.load(f)
+
+    # 2. Run ADK query and get output
+    adk_response, status_code = _run_adk_query(query)
+    if status_code != 200:
+        return adk_response, status_code
+    adk_output = adk_response.get_json().get('output', '')
+
+    # 3. Generate RL prompt
+    rl_instruction = rl_prompt(query, adk_output)
+
+
+    # 4. Use LLM to update agent.json
+    updated_json_str, _ = get_new_json_general(agent_json, rl_instruction)
+    try:
+        updated_json = json.loads(updated_json_str)
+    except Exception as e:
+        return jsonify({'error': f'Failed to parse updated agent JSON: {e}', 'raw': updated_json_str}), 500
+
+    # 5. Overwrite agent.json
+    with open(agent_json_path, 'w') as f:
+        json.dump(updated_json, f, indent=2)
+
+    return jsonify({'status': 'success', 'message': 'RL step completed.'}), 200
 
 if __name__ == '__main__':
     # You can change the host and port for your Flask app as needed

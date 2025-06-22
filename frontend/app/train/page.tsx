@@ -54,7 +54,7 @@ export default function AppPage() {
     if (!sessionId) return;
     const nodeData = findNodeByName(orgChart, selectedNode);
     if (!nodeData || !nodeData.id) return;
-    
+
     // Don't fetch for root node
     if (nodeData.id === "root_node") {
       setSelectedNodeJson(AgentContent);
@@ -62,7 +62,7 @@ export default function AppPage() {
       updateAgentJsonFile(AgentContent);
       return;
     }
-    
+
     fetch(`http://localhost:5000/history/${sessionId}/${nodeData.id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -184,17 +184,28 @@ export default function AppPage() {
 
       {/* Navigation Header */}
       <div className="absolute top-0 left-0 right-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center justify-between px-4 py-2">
+        {/* Gradient border accent */}
+        <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-green-500/40 via-blue-500/40 to-transparent" />
+        <div className="flex items-center justify-between px-4 py-2 relative">
           <div className="flex items-center space-x-2">
-            <Sparkles className="w-5 h-5 text-green-600" />
-            <span className="font-semibold text-lg">VibePrompting</span>
-            <p>{sessionId}</p>
+            <motion.span
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, 1.12, 1], opacity: [1, 0.85, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="inline-flex"
+            >
+              <Sparkles className="w-5 h-5 text-green-500 drop-shadow-md" />
+            </motion.span>
+            <span className="font-semibold text-lg text-blue-500">
+              VibePrompting
+            </span>
+            <p className="text-muted-foreground">{sessionId}</p>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => (window.location.href = "/")}
-            className="flex items-center space-x-0"
+            className="flex items-center space-x-0 hover:bg-blue-500/10 hover:text-blue-500 transition-all duration-200"
           >
             <Home className="w-4 h-4" />
             <span>Home</span>
@@ -208,14 +219,25 @@ export default function AppPage() {
           <Panel>
             <PanelGroup direction="vertical" className="h-full">
               <Panel>
-                <div className="overflow-auto h-full scrollbar-thin">
+                <motion.div
+                  className="overflow-auto h-full scrollbar-thin rounded-lg shadow-md bg-white/60 hover:shadow-lg transition-all duration-300"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.7, delay: 0.2 }}
+                >
                   <History
                     orgChart={orgChart}
+                    setOrgChart={setOrgChart}
                     selectedNode={selectedNode}
                     setSelectedNode={setSelectedNode}
                     isLogsOpen={isLogsOpen}
+                    sessionId={sessionId}
+                    nodeCounter={nodeCounter}
+                    setNodeCounter={setNodeCounter}
+                    messages={messages}
+                    setMessages={setMessages}
                   />
-                </div>
+                </motion.div>
               </Panel>
               <div>
                 <ChatInput
@@ -224,23 +246,28 @@ export default function AppPage() {
                   isProcessing={isProcessing}
                 />
               </div>
-              <PanelResizeHandle className="h-1 bg-border hover:bg-ring/50 transition-colors duration-200 group">
-                <div className="w-8 h-1 bg-muted-foreground/20 rounded-full mx-auto group-hover:bg-muted-foreground/40 transition-colors duration-200" />
+              <PanelResizeHandle className="h-1 bg-border hover:bg-blue-500/40 transition-colors duration-200 group">
+                <div className="w-8 h-1 bg-muted-foreground/20 rounded-full mx-auto group-hover:bg-blue-500/60 transition-colors duration-200" />
               </PanelResizeHandle>
               <Panel defaultSize={35} minSize={20} collapsible>
-                <div className="h-full bg-card/50">
+                <motion.div
+                  className="h-full bg-card/50 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.7, delay: 0.3 }}
+                >
                   <div className="h-full overflow-auto scrollbar-thin">
                     <AgentEditor
                       selectedNode={selectedNode}
                       nodeJson={selectedNodeJson}
                     />
                   </div>
-                </div>
+                </motion.div>
               </Panel>
             </PanelGroup>
           </Panel>
-          <PanelResizeHandle className="w-1 bg-border hover:bg-ring/50 transition-colors duration-200 group flex items-center justify-center">
-            <div className="h-8 w-1 bg-muted-foreground/20 rounded-full group-hover:bg-muted-foreground/40 transition-colors duration-200" />
+          <PanelResizeHandle className="w-1 bg-border hover:bg-green-500/40 transition-colors duration-200 group flex items-center justify-center">
+            <div className="h-8 w-1 bg-muted-foreground/20 rounded-full group-hover:bg-green-500/60 transition-colors duration-200" />
           </PanelResizeHandle>
           <Panel
             ref={logsPanelRef}
@@ -253,21 +280,30 @@ export default function AppPage() {
             onExpand={() => setIsLogsOpen(true)}
             order={2}
           >
-            <Logs
-              orgChart={orgChart}
-              selectedNode={selectedNode}
-              toggleLogs={collapseLogs}
-              messages={messages}
-            />
+            <motion.div
+              className="h-full rounded-lg shadow-md bg-white/60 hover:shadow-lg transition-all duration-300"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+            >
+              <Logs
+                orgChart={orgChart}
+                selectedNode={selectedNode}
+                toggleLogs={collapseLogs}
+                messages={messages}
+              />
+            </motion.div>
           </Panel>
         </PanelGroup>
         {!isLogsOpen && (
-          <Button
-            onClick={expandLogs}
-            className="absolute top-17.5 right-4 z-10 bg-card text-card-foreground border border-border hover:bg-accent hover:text-accent-foreground rounded-lg px-4 py-2 h-auto cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md"
-          >
-            Logs
-          </Button>
+          <motion.div className="absolute top-17.5 right-4 z-10">
+            <Button
+              onClick={expandLogs}
+              className="bg-blue-500/90 text-white border border-blue-500 hover:bg-green-500/90 hover:border-green-500 rounded-lg px-4 py-2 h-auto cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md hover:scale-105"
+            >
+              Logs
+            </Button>
+          </motion.div>
         )}
       </div>
     </div>
