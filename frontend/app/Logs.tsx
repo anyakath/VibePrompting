@@ -11,11 +11,7 @@ interface LogsProps {
   messages: Message[];
 }
 
-const Logs: React.FC<LogsProps> = ({
-  selectedNode,
-  toggleLogs,
-  messages,
-}) => {
+const Logs: React.FC<LogsProps> = ({ selectedNode, toggleLogs, messages }) => {
   return (
     <div className="w-full flex flex-col h-full bg-card/30">
       <div className="p-4 border-b border-border/50 bg-card/50">

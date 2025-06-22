@@ -28,7 +28,7 @@ const renderCustomNode = ({
   selectedNode,
 }: CustomNodeElementProps) => {
   const isSelected = nodeDatum.name === selectedNode;
-  
+
   return (
     <g>
       {/* Glow effect for selected node */}
@@ -40,7 +40,7 @@ const renderCustomNode = ({
           filter="url(#glow)"
         />
       )}
-      
+
       {/* Node label positioned above the node */}
       <text
         strokeWidth="0"
@@ -49,18 +49,16 @@ const renderCustomNode = ({
         textAnchor="middle"
         className={cn(
           "text-sm font-medium transition-all duration-300",
-          isSelected 
-            ? "fill-foreground font-semibold" 
-            : "fill-muted-foreground"
+          isSelected ? "fill-foreground font-semibold" : "fill-muted-foreground"
         )}
-        style={{ 
+        style={{
           textShadow: isSelected ? "0 1px 3px rgba(0,0,0,0.15)" : "none",
-          fontSize: isSelected ? "14px" : "13px"
+          fontSize: isSelected ? "14px" : "13px",
         }}
       >
         {nodeDatum.name}
       </text>
-      
+
       {/* Main node circle with gradient */}
       <circle
         r={16}
@@ -71,7 +69,7 @@ const renderCustomNode = ({
         className="cursor-pointer transition-all duration-300 hover:r-18"
         filter={isSelected ? "url(#shadow)" : "none"}
       />
-      
+
       {/* Hover effect indicator */}
       <circle
         r={16}
@@ -111,13 +109,13 @@ const History: React.FC<HistoryProps> = ({
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
-      
+
       await fetch("http://localhost:8000", {
         method: "HEAD",
         mode: "no-cors",
         signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
       return true;
     } catch {
@@ -131,48 +129,48 @@ const History: React.FC<HistoryProps> = ({
       const isRunning = await checkIfServerReady();
       setIsAgentRunning(isRunning);
     };
-    
+
     checkAgentStatus();
   }, []);
 
   const waitForServer = async (): Promise<void> => {
     const maxAttempts = 30; // 30 seconds max
     let attempts = 0;
-    
+
     while (attempts < maxAttempts) {
       const isReady = await checkIfServerReady();
       if (isReady) {
         setIsAgentRunning(true);
         return;
       }
-      
+
       attempts++;
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
     }
-    
+
     throw new Error("Server not ready after 30 seconds");
   };
 
   const handleRunAgent = async () => {
     if (isLoading) return; // Prevent multiple simultaneous requests
-    
+
     // If agent is already running, just open the interface
     if (isAgentRunning) {
       window.open("http://localhost:8000", "_blank");
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       // Trigger ADK web restart
       await fetch("http://localhost:5000/retrigger_adk_web", {
         method: "POST",
       });
-      
+
       // Wait for server to be ready
       await waitForServer();
-      
+
       // Open localhost:8000 in a new tab
       window.open("http://localhost:8000", "_blank");
     } catch (error) {
@@ -186,16 +184,16 @@ const History: React.FC<HistoryProps> = ({
   return (
     <div className="w-full h-full relative">
       {/* Enhanced header */}
-      <div 
-        className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-10"
-      >
-        <h2 className="text-lg mt-[-5px] font-semibold text-gray-900">Booking Agent</h2>
-        <div className={cn(!isLogsOpen && "mr-15")}>
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-10">
+        <h2 className="text-lg mt-[-5px] font-semibold text-gray-900">
+          Booking Agent
+        </h2>
+        <div className={cn(!isLogsOpen && "mr-16")}>
           <Button
             className={cn(
               "text-white",
-              isAgentRunning 
-                ? "bg-green-600 hover:bg-green-700" 
+              isAgentRunning
+                ? "bg-green-600 hover:bg-green-700"
                 : "bg-black hover:bg-gray-900"
             )}
             onClick={handleRunAgent}
@@ -229,7 +227,7 @@ const History: React.FC<HistoryProps> = ({
           </Button>
         </div>
       </div>
-      
+
       {/* Tree container */}
       <div className="w-full h-full">
         <Tree
@@ -240,6 +238,7 @@ const History: React.FC<HistoryProps> = ({
           draggable={true}
           collapsible={false}
           scaleExtent={{ min: 0.1, max: 4 }}
+          separation={{ siblings: 0.8, nonSiblings: 1.2 }}
           renderCustomNodeElement={(rd3tProps) =>
             renderCustomNode({
               ...rd3tProps,
@@ -251,60 +250,171 @@ const History: React.FC<HistoryProps> = ({
           pathClassFunc={() => "connection-line"}
           nodeSize={{ x: 200, y: 100 }}
         />
-        
+
         {/* SVG Definitions for gradients and filters */}
-        <svg width="0" height="0" style={{ position: 'absolute' }}>
+        <svg width="0" height="0" style={{ position: "absolute" }}>
           <defs>
             {/* Selected node gradient */}
-            <linearGradient id="selectedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "oklch(0.98 0.002 247.858)", stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: "oklch(0.95 0.007 247.896)", stopOpacity: 1 }} />
+            <linearGradient
+              id="selectedGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                style={{
+                  stopColor: "oklch(0.98 0.002 247.858)",
+                  stopOpacity: 1,
+                }}
+              />
+              <stop
+                offset="100%"
+                style={{
+                  stopColor: "oklch(0.95 0.007 247.896)",
+                  stopOpacity: 1,
+                }}
+              />
             </linearGradient>
-            
+
             {/* Default node gradient */}
-            <linearGradient id="defaultGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "oklch(1 0 0)", stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: "oklch(0.98 0.002 247.858)", stopOpacity: 1 }} />
+            <linearGradient
+              id="defaultGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                style={{ stopColor: "oklch(1 0 0)", stopOpacity: 1 }}
+              />
+              <stop
+                offset="100%"
+                style={{
+                  stopColor: "oklch(0.98 0.002 247.858)",
+                  stopOpacity: 1,
+                }}
+              />
             </linearGradient>
-            
+
             {/* Selected stroke gradient */}
-            <linearGradient id="selectedStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "oklch(0.25 0.042 265.755)", stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: "oklch(0.3 0.042 265.755)", stopOpacity: 1 }} />
+            <linearGradient
+              id="selectedStroke"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                style={{
+                  stopColor: "oklch(0.25 0.042 265.755)",
+                  stopOpacity: 1,
+                }}
+              />
+              <stop
+                offset="100%"
+                style={{
+                  stopColor: "oklch(0.3 0.042 265.755)",
+                  stopOpacity: 1,
+                }}
+              />
             </linearGradient>
-            
+
             {/* Default stroke gradient */}
-            <linearGradient id="defaultStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "oklch(0.85 0.013 255.508)", stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: "oklch(0.8 0.013 255.508)", stopOpacity: 1 }} />
+            <linearGradient
+              id="defaultStroke"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                style={{
+                  stopColor: "oklch(0.85 0.013 255.508)",
+                  stopOpacity: 1,
+                }}
+              />
+              <stop
+                offset="100%"
+                style={{
+                  stopColor: "oklch(0.8 0.013 255.508)",
+                  stopOpacity: 1,
+                }}
+              />
             </linearGradient>
-            
+
             {/* Hover stroke gradient */}
-            <linearGradient id="hoverStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "oklch(0.25 0.042 265.755)", stopOpacity: 0.6 }} />
-              <stop offset="100%" style={{ stopColor: "oklch(0.3 0.042 265.755)", stopOpacity: 0.6 }} />
+            <linearGradient
+              id="hoverStroke"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                style={{
+                  stopColor: "oklch(0.25 0.042 265.755)",
+                  stopOpacity: 0.6,
+                }}
+              />
+              <stop
+                offset="100%"
+                style={{
+                  stopColor: "oklch(0.3 0.042 265.755)",
+                  stopOpacity: 0.6,
+                }}
+              />
             </linearGradient>
-            
+
             {/* Glow effect for selected nodes */}
-            <linearGradient id="selectedGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "oklch(0.25 0.042 265.755)", stopOpacity: 0.3 }} />
-              <stop offset="100%" style={{ stopColor: "oklch(0.4 0.042 265.755)", stopOpacity: 0.1 }} />
+            <linearGradient
+              id="selectedGlow"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                style={{
+                  stopColor: "oklch(0.25 0.042 265.755)",
+                  stopOpacity: 0.3,
+                }}
+              />
+              <stop
+                offset="100%"
+                style={{
+                  stopColor: "oklch(0.4 0.042 265.755)",
+                  stopOpacity: 0.1,
+                }}
+              />
             </linearGradient>
-            
+
             {/* Filters */}
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-              <feMerge> 
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            
+
             <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="3" stdDeviation="5" floodColor="oklch(0.15 0.042 264.695)" floodOpacity="0.15"/>
+              <feDropShadow
+                dx="0"
+                dy="3"
+                stdDeviation="5"
+                floodColor="oklch(0.15 0.042 264.695)"
+                floodOpacity="0.15"
+              />
             </filter>
           </defs>
-          
+
           {/* Custom CSS for connection lines */}
           <style>
             {`
@@ -326,4 +436,3 @@ const History: React.FC<HistoryProps> = ({
 };
 
 export default History;
-
