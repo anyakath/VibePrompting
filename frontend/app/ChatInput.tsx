@@ -38,7 +38,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Enter node name..."
+          placeholder={isProcessing ? "Loading..." : "Enter node name..."}
           className="flex-1 bg-background/50 border-border/50 focus:border-ring focus:ring-ring/20 transition-all duration-200"
           disabled={isProcessing}
         />

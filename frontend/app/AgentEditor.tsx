@@ -1,21 +1,27 @@
 "use client";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
 import AgentContent from "@/lib/agent.json";
+import { FileText } from "lucide-react";
 
 const AgentEditor = () => {
   return (
-    <div className="p-4 border-t border-gray-200 h-full flex flex-col">
-      <h2 className="text-sm font-semibold mb-2">agent.json</h2>
-      <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full rounded-md border bg-gray-50">
-          <pre className="p-4 text-sm">
-            <code>{JSON.stringify(AgentContent, null, 2)}</code>
-          </pre>
-        </ScrollArea>
+    <div className="p-6 bg-background/30">
+      <div className="flex items-center gap-2 mb-4">
+        <FileText className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold text-foreground">agent.json</h2>
+        <div className="flex-1" />
+        <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
+          JSON
+        </div>
+      </div>
+      <div className="rounded-lg border border-border/50 bg-card/50 p-6 overflow-x-auto">
+        <pre className="text-sm leading-relaxed whitespace-pre">
+          <code className="text-muted-foreground font-mono">
+            {JSON.stringify(AgentContent, null, 2)}
+          </code>
+        </pre>
       </div>
     </div>
   );
 };
-
 export default AgentEditor;
