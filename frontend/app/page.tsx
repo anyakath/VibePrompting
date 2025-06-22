@@ -28,7 +28,7 @@ export default function Home() {
     ],
   });
 
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<string>("CEO");
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -41,7 +41,11 @@ export default function Home() {
         />
       </div>
       <div className="w-[400px]">
-        <Chat setOrgChart={setOrgChart} selectedNode={selectedNode} />
+        <Chat
+          setOrgChart={setOrgChart}
+          selectedNode={selectedNode}
+          setSelectedNode={setSelectedNode}
+        />
       </div>
     </div>
   );
