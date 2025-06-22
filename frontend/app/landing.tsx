@@ -1,14 +1,10 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, File, Sparkles, Bot, Code, Zap, ArrowRight, CheckCircle } from "lucide-react";
+import { Upload, File, Sparkles, Bot, Code, Zap, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<string>("");
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,47 +12,12 @@ export default function LandingPage() {
     if (!file) return;
 
     if (!file.name.endsWith('.zip')) {
-      setUploadStatus("Please upload a ZIP file containing your Google ADK agent folder.");
+      alert("Please upload a ZIP file containing your Google ADK agent folder.");
       return;
     }
 
-    setUploadedFile(file);
-    setIsUploading(true);
-    setUploadStatus("Uploading...");
-
-    const formData = new FormData();
-    formData.append('agent_zip', file);
-
-    try {
-      const response = await fetch('http://localhost:5000/upload_agent', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setUploadStatus(`Successfully uploaded: ${file.name}`);
-        
-        localStorage.setItem('uploadedAgent', JSON.stringify({
-          uploadId: result.upload_id,
-          fileName: file.name,
-          agentFiles: result.agent_files,
-          extractedPath: result.extracted_path,
-          uploadedAt: new Date().toISOString()
-        }));
-        
-        setTimeout(() => {
-          window.location.href = '/train';
-        }, 1500);
-      } else {
-        const error = await response.json();
-        setUploadStatus(`Upload failed: ${error.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      setUploadStatus(`Upload failed: ${error instanceof Error ? error.message : 'Network error'}`);
-    } finally {
-      setIsUploading(false);
-    }
+    // Immediately redirect to train page
+    window.location.href = '/train';
   };
 
   const handleDragOver = (event: React.DragEvent) => {
@@ -69,13 +30,12 @@ export default function LandingPage() {
     if (files.length > 0) {
       const file = files[0];
       if (file.name.endsWith('.zip')) {
-        setUploadedFile(file);
         if (fileInputRef.current) {
           fileInputRef.current.files = files;
           handleFileUpload({ target: { files } } as React.ChangeEvent<HTMLInputElement>);
         }
       } else {
-        setUploadStatus("Please upload a ZIP file containing your Google ADK agent folder.");
+        alert("Please upload a ZIP file containing your Google ADK agent folder.");
       }
     }
   };
@@ -152,21 +112,13 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 onClick={openFileDialog}
-                disabled={isUploading}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group"
               >
-                {isUploading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    <span>Uploading...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Upload className="w-5 h-5" />
-                    <span>Upload Your Agent</span>
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                )}
+                <div className="flex items-center space-x-2">
+                  <Upload className="w-5 h-5" />
+                  <span>Upload Your Agent</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </div>
               </Button>
             </div>
           </div>
@@ -234,15 +186,9 @@ export default function LandingPage() {
 
             <div className="bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-8 shadow-xl">
               <div
-                className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ${
-                  uploadedFile
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50 hover:bg-accent/20'
-                }`}
+                className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300`}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
               >
                 <input
                   ref={fileInputRef}
@@ -254,52 +200,28 @@ export default function LandingPage() {
                 
                 <div className="space-y-6">
                   <div className="flex justify-center">
-                    {uploadedFile ? (
-                      <div className="relative">
-                        <CheckCircle className="w-16 h-16 text-primary" />
-                        <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg" />
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <Upload className={`w-16 h-16 transition-all duration-300 ${isHovered ? 'text-primary scale-110' : 'text-muted-foreground'}`} />
-                        <div className="absolute inset-0 bg-primary/10 rounded-full blur-lg" />
-                      </div>
-                    )}
+                    <div className="relative">
+                      <Upload className={`w-16 h-16 transition-all duration-300`} />
+                      <div className="absolute inset-0 bg-primary/10 rounded-full blur-lg" />
+                    </div>
                   </div>
                   
-                  {uploadedFile ? (
-                    <div>
-                      <p className="text-lg font-semibold text-primary">{uploadedFile.name}</p>
-                      <p className="text-muted-foreground mt-2">File uploaded successfully</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-xl font-semibold mb-2">Drop your ZIP file here</p>
-                      <p className="text-muted-foreground">or click to browse files</p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-xl font-semibold mb-2">Drop your ZIP file here</p>
+                    <p className="text-muted-foreground">or click to browse files</p>
+                  </div>
                   
-                  {!uploadedFile && (
-                    <Button
-                      onClick={openFileDialog}
-                      variant="outline"
-                      size="lg"
-                      className="border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300"
-                      disabled={isUploading}
-                    >
-                      Choose File
-                    </Button>
-                  )}
+                  <Button
+                    onClick={openFileDialog}
+                    variant="outline"
+                    size="lg"
+                    className="border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300"
+                  >
+                    Choose File
+                  </Button>
                 </div>
 
               </div>
-
-              {/* Status */}
-              {uploadStatus && (
-                <div className="mt-6 p-4 rounded-lg bg-accent/50 border border-border">
-                  <p className="text-sm text-muted-foreground">{uploadStatus}</p>
-                </div>
-              )}
 
               {/* Instructions */}
               <div className="mt-8 p-6 bg-muted/30 border border-border rounded-xl">
@@ -345,4 +267,5 @@ export default function LandingPage() {
       </div>
     </div>
   );
-} } 
+}
+
