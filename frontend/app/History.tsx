@@ -6,6 +6,7 @@ import { OrgChartNode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { TreeNodeDatum } from "react-d3-tree";
 import { cn, truncateText } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
 
@@ -100,6 +101,9 @@ const History: React.FC<HistoryProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isAgentRunning, setIsAgentRunning] = useState(false);
+  const [trainQuery, setTrainQuery] = useState("");
+  const [trainIterations, setTrainIterations] = useState("10");
+  const [isTraining, setIsTraining] = useState(false);
 
   const handleNodeClick = (nodeData: TreeNodeDatum) => {
     setSelectedNode(nodeData.name);
@@ -181,14 +185,43 @@ const History: React.FC<HistoryProps> = ({
     }
   };
 
+  const handleTrainAgent = async () => {
+    if (isTraining || !trainQuery.trim() || !trainIterations) return;
+    
+    setIsTraining(true);
+    
+    try {
+      // Here you would implement the actual training logic
+      // For now, we'll just simulate a training process
+      console.log(`Training agent with query: "${trainQuery}" for ${trainIterations} iterations`);
+      
+      // Simulate training delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // You could add actual API call here:
+      // const response = await fetch("http://localhost:5000/train_agent", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ query: trainQuery, iterations: parseInt(trainIterations) })
+      // });
+      
+      console.log("Training completed successfully");
+    } catch (error) {
+      console.error("Error training agent:", error);
+    } finally {
+      setIsTraining(false);
+    }
+  };
+
   return (
     <div className="w-full h-full relative">
       {/* Enhanced header */}
-      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-10">
-        <h2 className="text-lg mt-[-5px] font-semibold text-gray-900">
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-10 pointer-events-none">
+        <h2 className="text-lg mt-[-5px] font-semibold text-gray-900 pointer-events-auto">
           Booking Agent
         </h2>
-        <div className={cn(!isLogsOpen && "mr-16")}>
+        
+        <div className={cn("flex flex-col space-y-4 pointer-events-auto", !isLogsOpen && "mr-16")}>
           <Button
             className={cn(
               "text-white",
@@ -225,6 +258,70 @@ const History: React.FC<HistoryProps> = ({
               "Run Agent"
             )}
           </Button>
+          
+          {/* Train Your Agent Section */}
+          <div className="p-4 bg-white/90 border border-gray-200 rounded-lg w-64">
+            <h3 className="text-sm font-medium text-gray-800 mb-3">
+              Train Your Agent
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Query
+                </label>
+                <Input
+                  type="text"
+                  value={trainQuery}
+                  onChange={(e) => setTrainQuery(e.target.value)}
+                  placeholder="Enter training query..."
+                  className="w-full text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  # of Iterations
+                </label>
+                <Input
+                  type="number"
+                  value={trainIterations}
+                  onChange={(e) => setTrainIterations(e.target.value)}
+                  placeholder="10"
+                  min="1"
+                  max="100"
+                  className="w-full text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                />
+              </div>
+              <Button
+                onClick={handleTrainAgent}
+                disabled={isTraining || !trainQuery.trim() || !trainIterations}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                {isTraining ? (
+                  <div className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Training...
+                  </div>
+                ) : (
+                  "Start Training"
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
