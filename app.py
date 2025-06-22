@@ -1,6 +1,5 @@
-
-
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
 import os
 import datetime # Used in your original your_gemini_agent_logic example
@@ -8,10 +7,10 @@ import subprocess # For running shell commands
 import platform   # For detecting the operating system
 import time       # For small delays
 
-# Assuming 'prompt.py' exists and contains 'get_new_json'
 from prompt import get_new_json_single_edit, get_new_json_general
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # --- Configuration for ADK Web Server ---
 ADK_WEB_PORT = 8000  # Default port for 'adk web'. Adjust if yours is different.

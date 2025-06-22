@@ -14,6 +14,7 @@ import {
   PanelResizeHandle,
   ImperativePanelHandle,
 } from "react-resizable-panels";
+import AgentContent from "@/lib/agent.json";
 
 export default function Home() {
   const [orgChart, setOrgChart] = useState<OrgChartNode>({
@@ -24,6 +25,7 @@ export default function Home() {
   const [selectedNode, setSelectedNode] = useState<string>("Booking Agent V1");
   const [isLogsOpen, setIsLogsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const logsPanelRef = useRef<ImperativePanelHandle>(null);
 
   const expandLogs = () => {
@@ -34,32 +36,74 @@ export default function Home() {
     logsPanelRef.current?.collapse();
   };
 
-  const handleAddNode = (inputValue: string) => {
+  const handleAddNode = async (inputValue: string) => {
     if (!inputValue.trim()) return;
 
-    // Check if this is the first child before updating the chart
-    const targetNode = findNodeByName(orgChart, selectedNode);
-    const isFirstChild = targetNode && targetNode.children.length === 0;
+    setIsProcessing(true);
 
-    // Add a single message for the node addition
-    const messageContent = isFirstChild
-      ? `Child node "${inputValue.trim()}" added`
-      : `Branch created and child node "${inputValue.trim()}" added`;
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        content: messageContent,
-        sender: "system",
-      },
-    ]);
-
-    setOrgChart((prevChart) => {
-      return addChildToNodeByName(prevChart, selectedNode, inputValue.trim());
+    // Create a Blob from the JSON data
+    const blob = new Blob([JSON.stringify(AgentContent)], {
+      type: "application/json",
     });
 
-    setSelectedNode(inputValue.trim());
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append("json_file", blob, "agent.json");
+    formData.append("prompt", inputValue.trim());
+
+    try {
+      // Make API call to Flask backend with file upload
+      const response = await fetch("http://localhost:5000/process_json", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to process prompt");
+      }
+
+      // Check if this is the first child before updating the chart
+      const targetNode = findNodeByName(orgChart, selectedNode);
+      const isFirstChild = targetNode && targetNode.children.length === 0;
+
+      // Add a message for the successful API call
+      const messageContent = isFirstChild
+        ? `Child node "${inputValue.trim()}" added`
+        : `Branch created and child node "${inputValue.trim()}" added`;
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          content: messageContent,
+          sender: "system",
+        },
+      ]);
+
+      setOrgChart((prevChart) => {
+        return addChildToNodeByName(prevChart, selectedNode, inputValue.trim());
+      });
+
+      setSelectedNode(inputValue.trim());
+    } catch (error) {
+      console.error("Error processing prompt:", error);
+
+      // Add error message to logs
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          content: `Error processing prompt: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+          sender: "system",
+        },
+      ]);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -83,6 +127,7 @@ export default function Home() {
                 <ChatInput
                   selectedNode={selectedNode}
                   onSendMessage={handleAddNode}
+                  isProcessing={isProcessing}
                 />
                 <div className="flex-1 min-h-0">
                   <AgentEditor />

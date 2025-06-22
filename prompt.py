@@ -13,6 +13,7 @@ def get_response(prompt):
         model="gemini-2.0-flash", contents=prompt
     ).text
 
+# Note: I modified this prompt to not use single quotation marks, but since it only edits part of the JSON, it might screw up
 def generate_prompt_single_edit(json, param, instruction):
     prompt = f"""
     You are an expert prompt engineer. You are given a JSON file that defines prompts for an AI agent and its tools. Read the JSON file carefully to understand what the AI agent is supposed to achieve. This is the JSON file:
@@ -25,9 +26,11 @@ def generate_prompt_single_edit(json, param, instruction):
 
     Do not modify any other lines, spacing, indentation, or trailing commas in the JSON.
 
+    Do not use single quotation marks or apostrophes. Only use double quotation marks.
+
     Do not reorder keys or change formatting.
 
-    Do not reformat the JSON or adjust quotes.
+    Do not reformat the JSON.
 
     Return the entire JSON with only that single change applied.
     """
@@ -48,11 +51,13 @@ def generate_prompt_general(json, instruction):
 
     Do not modify spacing, indentation, or trailing commas in the JSON.
 
+    Do not use single quotation marks or apostrophes. Only use double quotation marks.
+
     Do not reorder keys or change formatting.
 
     Do not add or remove any fields.
 
-    Do not reformat the JSON or adjust quotes.
+    Do not reformat the JSON.
 
     Return the entire JSON.
     """
@@ -67,8 +72,12 @@ def edit_json_file(data):
 def get_new_json_single_edit(input_json, param, instruction):
     prompt = generate_prompt_single_edit(str(input_json), param, instruction)
     response = get_response(prompt)
-    response_lines = response.split('\n')[1:-1]
+
     # don't use first and last line, which contains ```json and ```
+    response_lines = response.split('\n')[1:-1]
+    if "```" in response_lines[0]:
+        response_lines = response_lines[1:]
+
     final_response = '\n'.join(response_lines)
     edit_json_file(final_response)
     return final_response
@@ -76,8 +85,12 @@ def get_new_json_single_edit(input_json, param, instruction):
 def get_new_json_general(input_json, instruction):
     prompt = generate_prompt_general(str(input_json), instruction)
     response = get_response(prompt)
-    response_lines = response.split('\n')[1:-1]
+
     # don't use first and last line, which contains ```json and ```
+    response_lines = response.split('\n')[1:-1]
+    if "```" in response_lines[0]:
+        response_lines = response_lines[1:]
+
     final_response = '\n'.join(response_lines)
     edit_json_file(final_response)
     return final_response
