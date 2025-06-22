@@ -158,9 +158,23 @@ const History: React.FC<HistoryProps> = ({
   const handleRunAgent = async () => {
     if (isLoading) return; // Prevent multiple simultaneous requests
 
-    // If agent is already running, just open the interface
+    // If agent is already running, refresh the server
     if (isAgentRunning) {
-      window.open("http://localhost:8000", "_blank");
+      setIsLoading(true);
+      try {
+        // Trigger ADK web restart
+        await fetch("http://localhost:5000/retrigger_adk_web", {
+          method: "POST",
+        });
+
+        // Wait for server to be ready
+        await waitForServer();
+
+      } catch (error) {
+        console.error("Error refreshing agent:", error);
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
 
@@ -226,7 +240,7 @@ const History: React.FC<HistoryProps> = ({
             className={cn(
               "text-white",
               isAgentRunning
-                ? "bg-green-600 hover:bg-green-700"
+                ? "bg-blue-600 hover:bg-blue-700"
                 : "bg-black hover:bg-gray-900"
             )}
             onClick={handleRunAgent}
@@ -250,10 +264,10 @@ const History: React.FC<HistoryProps> = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Starting...
+                {isAgentRunning ? "Refreshing..." : "Starting..."}
               </div>
             ) : isAgentRunning ? (
-              "Agent Running"
+              "Refresh Server"
             ) : (
               "Run Agent"
             )}
