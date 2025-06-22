@@ -209,16 +209,13 @@ def process_json_single_edit(id):
 
     json_file = request.files['json_file']
     prompt = request.form.get('prompt')
-    param = request.form.get('param')
+    param = request.form.get('param', 'root_agent')  # Default to 'root_agent' if not provided
 
     if json_file.filename == '':
         return jsonify({"error": "No selected JSON file"}), 400
 
     if not prompt:
         return jsonify({"error": "No prompt provided"}), 400
-
-    if not param:
-        return jsonify({"error": "No param provided"}), 400
 
     if json_file:
         try:
