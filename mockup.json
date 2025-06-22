@@ -1,0 +1,9 @@
+
+{  "agents": {
+    "root_agent": "insert prompt here"
+  },
+  "tools": {
+    "tool_1": "insert prompt here",
+    "tool_2": "insert prompt here"
+  }
+}
