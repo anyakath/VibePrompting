@@ -11,6 +11,7 @@ import {
   Zap,
   ArrowRight,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function LandingPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,15 +62,38 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)]" />
-
+    <motion.div
+      className="min-h-screen bg-background relative overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+    >
+      {/* Animated Background Pattern */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-br from-background via-background to-blue-500/20"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2, delay: 0.2 }}
+      />
+      <motion.div
+        className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.10),transparent_50%)]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2, delay: 0.4 }}
+      />
       {/* Floating Elements */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse delay-1000" />
-
+      <motion.div
+        className="absolute top-20 left-10 w-72 h-72 bg-green-500/20 rounded-full blur-3xl animate-pulse"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1.2, delay: 0.6 }}
+      />
+      <motion.div
+        className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1.2, delay: 0.8 }}
+      />
       <div className="relative z-10">
         {/* Header */}
         <header className="relative">
@@ -88,7 +112,7 @@ export default function LandingPage() {
                 variant="ghost"
                 size="sm"
                 onClick={openFileDialog}
-                className="flex items-center space-x-2 hover:bg-accent/50"
+                className="flex items-center space-x-2 hover:bg-accent/50 transition-all duration-300 hover:scale-105"
               >
                 <span>Upload Agent</span>
                 <ArrowRight className="w-4 h-4" />
@@ -98,39 +122,58 @@ export default function LandingPage() {
         </header>
 
         {/* Hero Section */}
-        <section className="relative py-20 px-6">
+        <motion.section
+          className="relative py-20 px-6"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.2 }}
+        >
           <div className="max-w-7xl mx-auto text-center">
             <div className="mb-8">
-              <div className="inline-flex items-center space-x-2 bg-accent/50 backdrop-blur-sm border border-border rounded-full px-4 py-2 mb-6">
+              {/* Animated Badge */}
+              <motion.div className="inline-flex items-center space-x-2 bg-accent/50 backdrop-blur-sm border rounded-full px-4 py-2 mb-6">
                 <Sparkles className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium text-muted-foreground">
                   AI-Powered Agent Enhancement
                 </span>
-              </div>
-
-              <h1 className="text-5xl md:text-7xl font-bold mb-6">
+              </motion.div>
+              {/* Animated Headline */}
+              <motion.h1
+                className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+                initial={{ clipPath: "inset(0 100% 0 0)" }}
+                animate={{ clipPath: "inset(0 0% 0 0)" }}
+                transition={{ duration: 1.7, delay: 0.7, ease: "easeInOut" }}
+              >
                 <span className="bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
                   Transform Your
                 </span>
                 <br />
-                <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-green-800 to-blue-500 bg-clip-text text-transparent">
                   Google ADK Agents
                 </span>
-              </h1>
-
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              </motion.h1>
+              <motion.p
+                className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 1.1 }}
+              >
                 Enhance your AI agents with optimized meta prompting
                 infrastructure, featuring AI-generated prompting, validated with
                 state-of-the-art evals and dynamic git-like version control.
-              </p>
+              </motion.p>
             </div>
-
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+            <motion.div
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 1.3 }}
+            >
               <Button
                 size="lg"
                 onClick={openFileDialog}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-105"
               >
                 <div className="flex items-center space-x-2">
                   <Upload className="w-5 h-5" />
@@ -138,12 +181,17 @@ export default function LandingPage() {
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Button>
-            </div>
+            </motion.div>
           </div>
-        </section>
-
+        </motion.section>
         {/* Features Section */}
-        <section className="py-20 px-6 bg-muted/20">
+        <motion.section
+          className="py-20 px-6 bg-muted/20"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 1, delay: 0.2 }}
+        >
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -154,8 +202,7 @@ export default function LandingPage() {
                 systems
               </p>
             </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-8 cursor-default">
               {[
                 {
                   icon: Bot,
@@ -179,9 +226,13 @@ export default function LandingPage() {
                   color: "text-purple-600",
                 },
               ].map((feature, index) => (
-                <div
+                <motion.div
                   key={index}
-                  className="group bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 hover:bg-card/80 hover:border-primary/20 transition-all duration-300 hover:shadow-lg"
+                  className="group bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 hover:bg-card/80 hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:scale-105"
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.8, delay: 0.2 + index * 0.2 }}
                 >
                   <div className="w-12 h-12 rounded-lg bg-accent/50 flex items-center justify-center mb-4 group-hover:bg-accent/80 transition-colors">
                     <feature.icon className={`w-6 h-6 ${feature.color}`} />
@@ -192,14 +243,19 @@ export default function LandingPage() {
                   <p className="text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
-        </section>
-
+        </motion.section>
         {/* Upload Section */}
-        <section className="py-20 px-6">
+        <motion.section
+          className="py-20 px-6"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 1, delay: 0.2 }}
+        >
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -210,8 +266,13 @@ export default function LandingPage() {
                 intelligent prompting
               </p>
             </div>
-
-            <div className="bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-8 shadow-xl">
+            <motion.div
+              className="bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-8 shadow-xl"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 1, delay: 0.3 }}
+            >
               <div
                 className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300`}
                 onDragOver={handleDragOver}
@@ -224,15 +285,19 @@ export default function LandingPage() {
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-
                 <div className="space-y-6">
                   <div className="flex justify-center">
-                    <div className="relative">
+                    <motion.div
+                      className="relative"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      whileInView={{ scale: 1, opacity: 1 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ duration: 0.8, delay: 0.2 }}
+                    >
                       <Upload className="w-16 h-16 transition-all duration-300" />
                       <div className="absolute inset-0 bg-primary/10 rounded-full blur-lg" />
-                    </div>
+                    </motion.div>
                   </div>
-
                   <div>
                     <p className="text-xl font-semibold mb-2">
                       Drop your ZIP file here
@@ -241,20 +306,24 @@ export default function LandingPage() {
                       or click to browse files
                     </p>
                   </div>
-
                   <Button
                     onClick={openFileDialog}
                     variant="outline"
                     size="lg"
-                    className="border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300"
+                    className="border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300 hover:scale-105"
                   >
                     Choose File
                   </Button>
                 </div>
               </div>
-
               {/* Instructions */}
-              <div className="mt-8 p-6 bg-muted/30 border border-border rounded-xl">
+              <motion.div
+                className="mt-8 p-6 bg-muted/30 border border-border rounded-xl"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
                 <h4 className="font-semibold mb-3 flex items-center">
                   <File className="w-5 h-5 mr-2 text-primary" />
                   How to prepare your agent folder:
@@ -285,13 +354,18 @@ export default function LandingPage() {
                     Upload the ZIP file above to get started
                   </li>
                 </ol>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
-        </section>
-
+        </motion.section>
         {/* Footer */}
-        <footer className="py-12 px-6 border-t border-border bg-muted/20">
+        <motion.footer
+          className="py-12 px-6 border-t border-border bg-muted/20"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 1, delay: 0.2 }}
+        >
           <div className="max-w-7xl mx-auto text-center">
             <div className="flex items-center justify-center space-x-3 mb-4">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -302,8 +376,8 @@ export default function LandingPage() {
               of conversational AI
             </p>
           </div>
-        </footer>
+        </motion.footer>
       </div>
-    </div>
+    </motion.div>
   );
 }

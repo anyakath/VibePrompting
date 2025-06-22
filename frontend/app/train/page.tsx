@@ -32,7 +32,7 @@ export default function AppPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [nodeCounter, setNodeCounter] = useState<number>(1); // Start at 1 for first node
   const [selectedNodeJson, setSelectedNodeJson] =
-    useState<unknown>(AgentContent);
+    useState<object>(AgentContent);
   const logsPanelRef = useRef<ImperativePanelHandle>(null);
 
   // On mount, create a new session
