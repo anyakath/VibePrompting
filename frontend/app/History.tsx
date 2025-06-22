@@ -261,7 +261,7 @@ const History: React.FC<HistoryProps> = ({
           
           {/* Train Your Agent Section */}
           <div className="p-4 bg-white/90 border border-gray-200 rounded-lg w-64">
-            <h3 className="text-sm font-medium text-gray-800 mb-3">
+            <h3 className="text-md font-bold text-gray-800 mb-3">
               Train Your Agent
             </h3>
             <div className="space-y-3">
