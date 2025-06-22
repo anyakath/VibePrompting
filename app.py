@@ -7,7 +7,7 @@ import subprocess # For running shell commands
 import platform   # For detecting the operating system
 import time       # For small delays
 
-from prompt import get_new_json_single_edit, get_new_json_general
+from prompt import get_new_json_single_edit, get_new_json_general, summarize_changes
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -84,21 +84,21 @@ def call_general_agent(input_json_data, prompt):
     actual Gemini agent's interaction.
     """
     updated_json_data = input_json_data.copy()
-    context_of_changes = get_new_json_general(input_json_data, prompt)
-    # TODO: need to take in param to edit
+    _, changelog = get_new_json_general(input_json_data, prompt)
+    context_of_changes = changelog
 
     # Example: Modify JSON based on a simple prompt
     if "add_timestamp" in prompt.lower():
         updated_json_data["last_updated"] = datetime.datetime.now().isoformat()
-        context_of_changes += "- Added 'last_updated' timestamp.\n"
+        context_of_changes = (context_of_changes or "") + "- Added 'last_updated' timestamp.\n"
 
     if "change_status_to_processed" in prompt.lower():
         if "status" in updated_json_data:
             updated_json_data["status"] = "processed"
-            context_of_changes += "- Changed 'status' to 'processed'.\n"
+            context_of_changes = (context_of_changes or "") + "- Changed 'status' to 'processed'.\n"
         else:
             updated_json_data["status"] = "newly_processed"
-            context_of_changes += "- Added 'status' as 'newly_processed'.\n"
+            context_of_changes = (context_of_changes or "") + "- Added 'status' as 'newly_processed'.\n"
 
     if "add_notes" in prompt.lower() and "notes_content" in prompt.lower():
         try:
@@ -109,9 +109,9 @@ def call_general_agent(input_json_data, prompt):
             else:
                 notes_content = prompt[notes_start:notes_end].strip()
             updated_json_data["notes"] = notes_content
-            context_of_changes += f"- Added notes: '{notes_content}'.\n"
+            context_of_changes = (context_of_changes or "") + f"- Added notes: '{notes_content}'.\n"
         except Exception as e:
-            context_of_changes += f"- Failed to add notes due to error: {e}.\n"
+            context_of_changes = (context_of_changes or "") + f"- Failed to add notes due to error: {e}.\n"
 
     if not context_of_changes:
         context_of_changes = "No specific changes requested or applied based on the prompt."
@@ -226,21 +226,24 @@ def process_json_single_edit(id):
 
             # --- Call your custom Gemini agent logic for single edit ---
             updated_json, context_of_changes = call_single_edit_agent(input_json_data, prompt, param)
-            
+
             # Create history directory if it doesn't exist
             history_dir = "history"
             if not os.path.exists(history_dir):
                 os.makedirs(history_dir)
-            
+
             # Save the updated JSON to a file
             file_path = os.path.join(history_dir, f"{id}.json")
             with open(file_path, 'w') as f:
-                # The returned 'context_of_changes' is actually the updated JSON string
-                f.write(context_of_changes)
+                json.dump(updated_json, f, indent=2)
+
+            # Summarize the change for node naming
+            node_name = summarize_changes(prompt, context_of_changes)
 
             return jsonify({
-                "updated_json": json.loads(context_of_changes), # parse string to json
-                "context_of_changes": "JSON processed and saved."
+                "updated_json": json.dumps(updated_json, indent=2),
+                "context_of_changes": context_of_changes,
+                "node_name": node_name
             }), 200
 
         except json.JSONDecodeError:
@@ -282,12 +285,15 @@ def process_json_general(id):
             # Save the updated JSON to a file
             file_path = os.path.join(history_dir, f"{id}.json")
             with open(file_path, 'w') as f:
-                # The returned 'context_of_changes' is actually the updated JSON string
-                f.write(context_of_changes)
+                json.dump(updated_json, f, indent=2)
+
+            # Summarize the change for node naming
+            node_name = summarize_changes(prompt, context_of_changes)
 
             return jsonify({
-                "updated_json": json.loads(context_of_changes), # parse string to json
-                "context_of_changes": "JSON processed and saved."
+                "updated_json": json.dumps(updated_json, indent=2),
+                "context_of_changes": context_of_changes,
+                "node_name": node_name
             }), 200
 
         except json.JSONDecodeError:

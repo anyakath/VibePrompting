@@ -53,10 +53,13 @@ export default function Home() {
 
     try {
       // Make API call to Flask backend with file upload
-      const response = await fetch("http://localhost:5000/process_json/1", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:5000/process_json/general/1",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const result = await response.json();
 
@@ -64,14 +67,12 @@ export default function Home() {
         throw new Error(result.error || "Failed to process prompt");
       }
 
-      // Check if this is the first child before updating the chart
+      const nodeName = result.node_name || inputValue.trim();
       const targetNode = findNodeByName(orgChart, selectedNode);
       const isFirstChild = targetNode && targetNode.children.length === 0;
-
-      // Add a message for the successful API call
       const messageContent = isFirstChild
-        ? `Child node "${inputValue.trim()}" added`
-        : `Branch created and child node "${inputValue.trim()}" added`;
+        ? `Child node "${nodeName}" added`
+        : `Branch created and child node "${nodeName}" added`;
 
       setMessages((prev) => [
         ...prev,
@@ -83,10 +84,10 @@ export default function Home() {
       ]);
 
       setOrgChart((prevChart) => {
-        return addChildToNodeByName(prevChart, selectedNode, inputValue.trim());
+        return addChildToNodeByName(prevChart, selectedNode, nodeName);
       });
 
-      setSelectedNode(inputValue.trim());
+      setSelectedNode(nodeName);
     } catch (error) {
       console.error("Error processing prompt:", error);
 
