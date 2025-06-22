@@ -70,29 +70,19 @@ const renderCustomNode = ({
         strokeWidth={isSelected ? 3 : 2}
         stroke={isSelected ? "url(#selectedStroke)" : "url(#defaultStroke)"}
         onClick={onNodeClick}
-        className="cursor-pointer transition-all duration-300 hover:r-18"
+        className="cursor-pointer transition-all duration-300"
         filter={isSelected ? "url(#shadow)" : "none"}
         initial={isSelected ? { scale: 0.95 } : { scale: 1 }}
         animate={isSelected ? { scale: [0.95, 1.05, 1] } : { scale: 1 }}
         transition={isSelected ? { duration: 1.2, repeat: Infinity } : {}}
-      />
-
-      {/* Hover effect indicator */}
-      <circle
-        r={16}
-        fill="transparent"
-        stroke="transparent"
-        onClick={onNodeClick}
-        className="cursor-pointer"
         onMouseEnter={(e) => {
-          e.currentTarget.style.stroke = "url(#hoverStroke)";
-          e.currentTarget.style.strokeWidth = "2";
-          e.currentTarget.style.opacity = "0.4";
+          e.currentTarget.setAttribute("filter", "url(#whiteGlow)");
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.stroke = "transparent";
-          e.currentTarget.style.strokeWidth = "0";
-          e.currentTarget.style.opacity = "0";
+          e.currentTarget.setAttribute(
+            "filter",
+            isSelected ? "url(#shadow)" : "none"
+          );
         }}
       />
     </g>
@@ -314,20 +304,8 @@ const History: React.FC<HistoryProps> = ({
               x2="100%"
               y2="100%"
             >
-              <stop
-                offset="0%"
-                style={{
-                  stopColor: "oklch(0.25 0.042 265.755)",
-                  stopOpacity: 1,
-                }}
-              />
-              <stop
-                offset="100%"
-                style={{
-                  stopColor: "oklch(0.3 0.042 265.755)",
-                  stopOpacity: 1,
-                }}
-              />
+              <stop offset="0%" stopColor="#22c55e" /> {/* green-500 */}
+              <stop offset="100%" stopColor="#3b82f6" /> {/* blue-500 */}
             </linearGradient>
 
             {/* Default stroke gradient */}
@@ -338,44 +316,8 @@ const History: React.FC<HistoryProps> = ({
               x2="100%"
               y2="100%"
             >
-              <stop
-                offset="0%"
-                style={{
-                  stopColor: "oklch(0.85 0.013 255.508)",
-                  stopOpacity: 1,
-                }}
-              />
-              <stop
-                offset="100%"
-                style={{
-                  stopColor: "oklch(0.8 0.013 255.508)",
-                  stopOpacity: 1,
-                }}
-              />
-            </linearGradient>
-
-            {/* Hover stroke gradient */}
-            <linearGradient
-              id="hoverStroke"
-              x1="0%"
-              y1="0%"
-              x2="100%"
-              y2="100%"
-            >
-              <stop
-                offset="0%"
-                style={{
-                  stopColor: "oklch(0.25 0.042 265.755)",
-                  stopOpacity: 0.6,
-                }}
-              />
-              <stop
-                offset="100%"
-                style={{
-                  stopColor: "oklch(0.3 0.042 265.755)",
-                  stopOpacity: 0.6,
-                }}
-              />
+              <stop offset="0%" stopColor="#60a5fa" /> {/* blue-400 */}
+              <stop offset="100%" stopColor="#3b82f6" /> {/* blue-500 */}
             </linearGradient>
 
             {/* Glow effect for selected nodes */}
@@ -419,6 +361,15 @@ const History: React.FC<HistoryProps> = ({
                 floodColor="oklch(0.15 0.042 264.695)"
                 floodOpacity="0.15"
               />
+            </filter>
+
+            {/* White glow filter for hover */}
+            <filter id="whiteGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
             </filter>
           </defs>
 
