@@ -5,26 +5,26 @@ import json
 from os import path
 
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
-RAPIDAPI_HOST = "hotels-com6.p.rapidapi.com"
+RAPIDAPI_HOST = "booking-com15.p.rapidapi.com"
 
 basepath = path.dirname(__file__)
 filepath = path.abspath(path.join(basepath, "..", "prompts.json"))
 
 with open(filepath) as json_data:
   data = json.load(json_data)
-  PROMPT = data['tools']['hotels_search_endpoint']
+  PROMPT = data['tools']['get_hotel_details_endpoint']
   json_data.close()
 
 # Change the Args to Match the Tool Name and Parameters
-def hotels_search_endpoint(location_id: str, checkin_date: str, checkout_date: str) -> Dict:
+def get_hotel_details_endpoint(hotel_id: str, arrival_date: str, departure_date: str) -> Dict:
   f"{PROMPT}"
 
-  url = f"https://{RAPIDAPI_HOST}/hotels/search"
+  url = f"https://{RAPIDAPI_HOST}/api/v1/hotels/getHotelDetails"
 
   querystring = {
-    "locationId": location_id,
-    "checkinDate": checkin_date,
-    "checkoutDate": checkout_date,
+    "hotelId": hotel_id,
+    "arrivalDate": arrival_date,
+    "departureDate": departure_date
   }
 
   headers = {

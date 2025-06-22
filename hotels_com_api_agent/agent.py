@@ -1,8 +1,8 @@
 import os
 from google.adk.agents import Agent
-from hotels_com_api_agent.tools.hotels_search_endpoint import hotels_search_endpoint
-from hotels_com_api_agent.tools.hotels_autocomplete_endpoint import hotels_autocomplete_endpoint
-from hotels_com_api_agent.tools.hotels_reviews_summary_endpoint import hotels_review_summary_endpoint
+from hotels_com_api_agent.tools.search_hotel_destination_endpoint import search_hotel_destination_endpoint
+from hotels_com_api_agent.tools.search_hotels_endpoint import search_hotels_endpoint
+from hotels_com_api_agent.tools.get_hotel_details_endpoint import get_hotel_details_endpoint
 import json
 from os import path
 
@@ -21,5 +21,5 @@ root_agent = Agent(
   model="gemini-2.0-flash-lite",
   description="BookingCOM API Agent",
   instruction=PROMPT,
-  tools=[hotels_search_endpoint, hotels_autocomplete_endpoint, hotels_review_summary_endpoint],
+  tools=[search_hotels_endpoint, search_hotel_destination_endpoint, get_hotel_details_endpoint],
 )

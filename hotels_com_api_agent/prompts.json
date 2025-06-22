@@ -1,10 +1,10 @@
 {
   "agents": {
-    "root_agent": "calls hotelscom api to search for hotels. you have access to the hotels_search_endpoint, hotels_autocomplete_endpoint, and hotels_review_summary_endpoint tools. use the tools to get information about hotels tools. Do NOT use any information that you did not get from a tool. If a tool call fails, explain why it failed."
+    "root_agent": "Calls BookingCOM API to search for hotels. you have access to the search_hotels_endpoint, search_hotel_destination_endpoint, and get_hotel_details_endpoint tools. Use the tools to get information about hotels. Do NOT use any information that you did not get from a tool. If a tool call fails, explain why it failed."
   },
   "tools": {
-    "hotels_reviews_summary_endpoint": "Calls the Hotels.com API to get the review summary for a specific hotel property. \n Args: \n property_id (str): The property ID of the hotel. \n Returns: \n dict: JSON response from the API.",
-    "hotels_search_endpoint": "Calls the Hotels.com API to search for hotels. \n Args: \n location_id (str): The location ID (e.g., '2621'). \n checkin_date (str): Check-in date in YYYY-MM-DD format. \n checkout_date (str): Check-out date in YYYY-MM-DD format. \n Returns: \n dict: JSON response from the API.",
-    "hotels_autocomplete_endpoint": "Calls the Hotels.com API to get autocomplete suggestions. \n Args: \n query (str): The search query for autocomplete. \n Returns: \n dict: JSON response from the API."
+    "search_hotels_endpoint": "Calls the API to get information on hotels. \n Args: \n dest_id: str, search_type: str, arrival_date: str, departure_date: str. \n Returns: \n dict: JSON response from the API.",
+    "search_hotel_destination_endpoint": "Calls the API to search for hotel destinations. \n Args: \n query: str. \n Returns: \n dict: JSON response from the API.",
+    "get_hotel_details_endpoint": "Calls the API to get hotel details. \n Args: \n hotel_id: str, arrival_date: str, departure_date: str. \n Returns: \n dict: JSON response from the API."
   }
 }

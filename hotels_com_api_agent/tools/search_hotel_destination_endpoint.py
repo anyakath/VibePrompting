@@ -5,20 +5,20 @@ import json
 from os import path
 
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
-RAPIDAPI_HOST = "hotels-com6.p.rapidapi.com"
+RAPIDAPI_HOST =  "booking-com15.p.rapidapi.com"
 
 basepath = path.dirname(__file__)
 filepath = path.abspath(path.join(basepath, "..", "prompts.json"))
 
 with open(filepath) as json_data:
   data = json.load(json_data)
-  PROMPT = data['tools']['hotels_search_endpoint']
+  PROMPT = data['tools']['search_hotel_destination_endpoint']
   json_data.close()
 
-def hotels_autocomplete_endpoint(query: str) -> Dict:
+def search_hotel_destination_endpoint(query: str) -> Dict:
   f"{PROMPT}"
-  
-  url = f"https://{RAPIDAPI_HOST}/hotels/auto-complete"
+
+  url = f"https://{RAPIDAPI_HOST}/api/v1/hotels/searchDestination"
 
   querystring = {
     "query": query
