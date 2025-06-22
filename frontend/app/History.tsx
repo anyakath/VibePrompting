@@ -34,54 +34,55 @@ const renderCustomNode = ({
       {/* Glow effect for selected node */}
       {isSelected && (
         <circle
-          r={20}
+          r={22}
           fill="url(#selectedGlow)"
-          opacity="0.4"
+          opacity="0.3"
           filter="url(#glow)"
         />
       )}
       
-      {/* Main node circle with gradient */}
-      <circle
-        r={15}
-        fill={isSelected ? "url(#selectedGradient)" : "url(#defaultGradient)"}
-        strokeWidth={isSelected ? 3 : 2}
-        stroke={isSelected ? "#374151" : "#d1d5db"}
-        onClick={onNodeClick}
-        className="cursor-pointer transition-all duration-200 hover:r-18"
-        filter={isSelected ? "url(#shadow)" : "none"}
-      />
-      
-      {/* Node label with better styling */}
+      {/* Node label positioned above the node */}
       <text
         strokeWidth="0"
-        x="25"
-        dy=".35em"
+        x="0"
+        y="-30"
+        textAnchor="middle"
         className={cn(
-          "text-sm font-medium transition-all duration-200",
+          "text-sm font-medium transition-all duration-300",
           isSelected 
-            ? "fill-gray-900 font-semibold" 
-            : "fill-gray-700"
+            ? "fill-foreground font-semibold" 
+            : "fill-muted-foreground"
         )}
         style={{ 
-          textShadow: isSelected ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
+          textShadow: isSelected ? "0 1px 3px rgba(0,0,0,0.15)" : "none",
           fontSize: isSelected ? "14px" : "13px"
         }}
       >
         {nodeDatum.name}
       </text>
       
+      {/* Main node circle with gradient */}
+      <circle
+        r={16}
+        fill={isSelected ? "url(#selectedGradient)" : "url(#defaultGradient)"}
+        strokeWidth={isSelected ? 3 : 2}
+        stroke={isSelected ? "url(#selectedStroke)" : "url(#defaultStroke)"}
+        onClick={onNodeClick}
+        className="cursor-pointer transition-all duration-300 hover:r-18"
+        filter={isSelected ? "url(#shadow)" : "none"}
+      />
+      
       {/* Hover effect indicator */}
       <circle
-        r={15}
+        r={16}
         fill="transparent"
         stroke="transparent"
         onClick={onNodeClick}
         className="cursor-pointer"
         onMouseEnter={(e) => {
-          e.currentTarget.style.stroke = "#374151";
+          e.currentTarget.style.stroke = "url(#hoverStroke)";
           e.currentTarget.style.strokeWidth = "2";
-          e.currentTarget.style.opacity = "0.3";
+          e.currentTarget.style.opacity = "0.4";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.stroke = "transparent";
@@ -105,25 +106,26 @@ const History: React.FC<HistoryProps> = ({
 
   return (
     <div className="w-full h-full relative">
-      {/* Simple header */}
+      {/* Enhanced header */}
       <div 
-        className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 backdrop-blur-sm"
-        style={{ backgroundColor: 'transparent' }}
+        className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10"
       >
-        <h2 className="text-lg font-semibold text-gray-900">Booking Agent</h2>
-        <div className={cn(!isLogsOpen && "mr-15")}>
-          <Button className="bg-gray-900 text-white hover:bg-gray-800">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-xl font-semibold text-foreground">Booking Agent</h2>
+        </div>
+        <div className={cn("flex items-center gap-3", !isLogsOpen && "mr-15")}>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md">
             Run Agent
           </Button>
         </div>
       </div>
       
       {/* Tree container */}
-      <div className="w-full h-full pt-20">
+      <div className="w-full h-full">
         <Tree
           data={orgChart}
           orientation="horizontal"
-          translate={{ x: 150, y: 170 }}
+          translate={{ x: 150, y: 260 }}
           zoomable={true}
           draggable={true}
           collapsible={false}
@@ -145,25 +147,43 @@ const History: React.FC<HistoryProps> = ({
           <defs>
             {/* Selected node gradient */}
             <linearGradient id="selectedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "#f3f4f6", stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: "#e5e7eb", stopOpacity: 1 }} />
+              <stop offset="0%" style={{ stopColor: "oklch(0.98 0.002 247.858)", stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: "oklch(0.95 0.007 247.896)", stopOpacity: 1 }} />
             </linearGradient>
             
             {/* Default node gradient */}
             <linearGradient id="defaultGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "#ffffff", stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: "#f9fafb", stopOpacity: 1 }} />
+              <stop offset="0%" style={{ stopColor: "oklch(1 0 0)", stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: "oklch(0.98 0.002 247.858)", stopOpacity: 1 }} />
+            </linearGradient>
+            
+            {/* Selected stroke gradient */}
+            <linearGradient id="selectedStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: "oklch(0.25 0.042 265.755)", stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: "oklch(0.3 0.042 265.755)", stopOpacity: 1 }} />
+            </linearGradient>
+            
+            {/* Default stroke gradient */}
+            <linearGradient id="defaultStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: "oklch(0.85 0.013 255.508)", stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: "oklch(0.8 0.013 255.508)", stopOpacity: 1 }} />
+            </linearGradient>
+            
+            {/* Hover stroke gradient */}
+            <linearGradient id="hoverStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: "oklch(0.25 0.042 265.755)", stopOpacity: 0.6 }} />
+              <stop offset="100%" style={{ stopColor: "oklch(0.3 0.042 265.755)", stopOpacity: 0.6 }} />
             </linearGradient>
             
             {/* Glow effect for selected nodes */}
             <linearGradient id="selectedGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "#374151", stopOpacity: 0.2 }} />
-              <stop offset="100%" style={{ stopColor: "#6b7280", stopOpacity: 0.1 }} />
+              <stop offset="0%" style={{ stopColor: "oklch(0.25 0.042 265.755)", stopOpacity: 0.3 }} />
+              <stop offset="100%" style={{ stopColor: "oklch(0.4 0.042 265.755)", stopOpacity: 0.1 }} />
             </linearGradient>
             
             {/* Filters */}
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
               <feMerge> 
                 <feMergeNode in="coloredBlur"/>
                 <feMergeNode in="SourceGraphic"/>
@@ -171,7 +191,7 @@ const History: React.FC<HistoryProps> = ({
             </filter>
             
             <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#374151" floodOpacity="0.2"/>
+              <feDropShadow dx="0" dy="3" stdDeviation="5" floodColor="oklch(0.15 0.042 264.695)" floodOpacity="0.15"/>
             </filter>
           </defs>
           
@@ -179,19 +199,13 @@ const History: React.FC<HistoryProps> = ({
           <style>
             {`
               .connection-line {
-                stroke: #d1d5db;
+                stroke: oklch(0.85 0.013 255.508);
                 stroke-width: 2.5;
                 stroke-linecap: round;
                 stroke-linejoin: round;
                 stroke-dasharray: 8, 4;
-                opacity: 0.7;
+                opacity: 0.6;
                 transition: all 0.3s ease;
-              }
-              
-              .connection-line:hover {
-                stroke-width: 3;
-                opacity: 1;
-                stroke-dasharray: 12, 6;
               }
             `}
           </style>
