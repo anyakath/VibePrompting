@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { OrgChartNode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -100,17 +100,86 @@ const History: React.FC<HistoryProps> = ({
   setSelectedNode,
   isLogsOpen,
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAgentRunning, setIsAgentRunning] = useState(false);
+
   const handleNodeClick = (nodeData: TreeNodeDatum) => {
     setSelectedNode(nodeData.name);
   };
 
-  const handleRunAgent = async () => {
+  const checkIfServerReady = async (): Promise<boolean> => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+      
+      await fetch("http://localhost:8000", {
+        method: "HEAD",
+        mode: "no-cors",
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Check if agent is running on component mount
+  React.useEffect(() => {
+    const checkAgentStatus = async () => {
+      const isRunning = await checkIfServerReady();
+      setIsAgentRunning(isRunning);
+    };
+    
+    checkAgentStatus();
+  }, []);
+
+  const waitForServer = async (): Promise<void> => {
+    const maxAttempts = 30; // 30 seconds max
+    let attempts = 0;
+    
+    while (attempts < maxAttempts) {
+      const isReady = await checkIfServerReady();
+      if (isReady) {
+        setIsAgentRunning(true);
+        return;
+      }
+      
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+    }
+    
+    throw new Error("Server not ready after 30 seconds");
+  };
+
+  const handleRunAgent = async () => {
+    if (isLoading) return; // Prevent multiple simultaneous requests
+    
+    // If agent is already running, just open the interface
+    if (isAgentRunning) {
+      window.open("http://localhost:8000", "_blank");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Trigger ADK web restart
       await fetch("http://localhost:5000/retrigger_adk_web", {
         method: "POST",
       });
+      
+      // Wait for server to be ready
+      await waitForServer();
+      
+      // Open localhost:8000 in a new tab
+      window.open("http://localhost:8000", "_blank");
     } catch (error) {
-      console.error("Error retriggering agent:", error);
+      console.error("Error starting agent:", error);
+      // You could show an error message here if needed
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -118,15 +187,45 @@ const History: React.FC<HistoryProps> = ({
     <div className="w-full h-full relative">
       {/* Enhanced header */}
       <div 
-        className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10"
+        className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-10"
       >
-        <h2 className="text-lg font-semibold text-gray-900">Booking Agent</h2>
+        <h2 className="text-lg mt-[-5px] font-semibold text-gray-900">Booking Agent</h2>
         <div className={cn(!isLogsOpen && "mr-15")}>
           <Button
-            className="bg-gray-900 text-white hover:bg-gray-800"
+            className={cn(
+              "text-white",
+              isAgentRunning 
+                ? "bg-green-600 hover:bg-green-700" 
+                : "bg-black hover:bg-gray-900"
+            )}
             onClick={handleRunAgent}
+            disabled={isLoading}
           >
-            Run Agent
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Starting...
+              </div>
+            ) : isAgentRunning ? (
+              "Agent Running"
+            ) : (
+              "Run Agent"
+            )}
           </Button>
         </div>
       </div>
@@ -227,7 +326,4 @@ const History: React.FC<HistoryProps> = ({
 };
 
 export default History;
-function handleRunAgent(event: MouseEvent<HTMLButtonElement, MouseEvent>): void {
-  throw new Error("Function not implemented.");
-}
 
