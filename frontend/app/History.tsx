@@ -45,7 +45,7 @@ const renderCustomNode = ({
       <text
         strokeWidth="0"
         x="0"
-        y="-30"
+        y="-35"
         textAnchor="middle"
         className={cn(
           "text-sm font-medium transition-all duration-300",
@@ -229,11 +229,11 @@ const History: React.FC<HistoryProps> = ({
       </div>
 
       {/* Tree container */}
-      <div className="w-full h-full">
+      <div className="w-full h-full relative">
         <Tree
           data={orgChart}
           orientation="horizontal"
-          translate={{ x: 150, y: 260 }}
+          translate={{ x: 150, y: 220 }}
           zoomable={true}
           draggable={true}
           collapsible={false}

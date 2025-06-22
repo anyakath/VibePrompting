@@ -24,9 +24,9 @@ const Logs: React.FC<LogsProps> = ({ selectedNode, toggleLogs, messages }) => {
             variant="ghost"
             size="icon"
             onClick={toggleLogs}
-            className="h-6 w-6 hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
+            className="h-8 w-8 items-center hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
           >
-            <PanelRightClose className="h-3 w-3" />
+            <PanelRightClose className="h-5 w-5" />
           </Button>
         </div>
         <div className="flex items-center gap-2 text-xs">
