@@ -4,6 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ChatInputProps {
   selectedNode: string;
@@ -15,6 +22,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const [selectedOption, setSelectedOption] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,9 +34,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <div className="p-6 border-b border-border/50 bg-card/30">
       <div className="mb-3">
-        <h3 className="text-sm font-medium text-foreground">Add Child Node</h3>
+        <h3 className="text-sm font-medium text-foreground">Generate New Prompts</h3>
         <p className="text-xs text-muted-foreground mt-1">
-          Add a new child to: <span className="font-medium text-primary">{selectedNode}</span>
+          Build off of: <span className="font-medium text-primary">{selectedNode}</span>
         </p>
       </div>
       <form className="flex gap-3" onSubmit={handleSubmit}>
@@ -47,6 +55,22 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <Send className="h-4 w-4" />
         </Button>
       </form>
+      <div className="mt-1 ml-1 flex justify-start">
+        <Select value={selectedOption} onValueChange={setSelectedOption}>
+          <SelectTrigger className="w-48 h-8 text-xs bg-background/30 border-border/30">
+            <SelectValue placeholder="Edit Everything..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="everything">Edit Everything</SelectItem>
+            <SelectItem value="search_destination">Edit Search Destination Tool</SelectItem>
+            <SelectItem value="booking_tool">Edit Booking Tool</SelectItem>
+            <SelectItem value="payment_tool">Edit Payment Tool</SelectItem>
+            <SelectItem value="agent_1">Edit Agent 1</SelectItem>
+            <SelectItem value="agent_2">Edit Agent 2</SelectItem>
+            <SelectItem value="agent_3">Edit Agent 3</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 };

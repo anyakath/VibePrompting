@@ -41,11 +41,11 @@ const Logs: React.FC<LogsProps> = ({
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4 min-h-0 scrollbar-thin">
-        <div className="flex flex-col gap-3">
+      <ScrollArea className="flex-1 p-4 min-h-0 scrollbar-thin flex">
+        <div className="flex flex-col gap-3 w-full">
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center py-8">
+            <div className="flex items-center justify-center flex-1">
+              <div className="text-center py-8 max-w-[250px] mt-[30vh]">
                 <Activity className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
                 <p className="text-base text-muted-foreground mb-2">No activity yet</p>
                 <p className="text-sm text-muted-foreground/70">
