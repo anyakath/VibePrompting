@@ -4,10 +4,10 @@ import React, { useState, useRef } from "react";
 import Logs from "@/app/Logs";
 import History from "@/app/History";
 import { Message, OrgChartNode } from "@/lib/types";
-import PromptEditor from "./PromptEditor";
+import PromptEditor from "@/app/PromptEditor";
 import { Button } from "@/components/ui/button";
 import { addChildToNodeByName, findNodeByName } from "@/lib/utils";
-import ChatInput from "./ChatInput";
+import ChatInput from "@/app/ChatInput";
 import {
   Panel,
   PanelGroup,
@@ -54,28 +54,28 @@ export default function Home() {
   const handleAddNode = (inputValue: string) => {
     if (!inputValue.trim()) return;
 
-    const newMessages: Message[] = [];
+    // Check if this is the first child before updating the chart
+    const targetNode = findNodeByName(orgChart, selectedNode);
+    const isFirstChild = targetNode && targetNode.children.length === 0;
+
+    // Add a single message for the node addition
+    const messageContent = isFirstChild
+      ? `Child node "${inputValue.trim()}" added`
+      : `Branch created and child node "${inputValue.trim()}" added`;
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        content: messageContent,
+        sender: "system",
+      },
+    ]);
 
     setOrgChart((prevChart) => {
-      const targetNode = findNodeByName(prevChart, selectedNode);
-      if (targetNode && targetNode.children.length === 0) {
-        newMessages.push({
-          id: Date.now().toString(),
-          content: "Branch created",
-          sender: "system",
-        });
-      }
-
-      newMessages.push({
-        id: (Date.now() + 1).toString(),
-        content: `Child node "${inputValue.trim()}" added`,
-        sender: "system",
-      });
-
       return addChildToNodeByName(prevChart, selectedNode, inputValue.trim());
     });
 
-    setMessages((prev) => [...prev, ...newMessages]);
     setSelectedNode(inputValue.trim());
   };
 
@@ -130,7 +130,7 @@ export default function Home() {
       {!isLogsOpen && (
         <Button
           onClick={expandLogs}
-          className="absolute top-4 right-0 z-10 bg-white text-black border border-gray-300 hover:bg-gray-100 rounded-l-md rounded-r-none px-4 py-2 h-auto cursor-pointer"
+          className="absolute top-4 right-4 z-10 bg-white text-black border border-gray-300 hover:bg-gray-100 rounded-md px-4 py-2 cursor-pointer"
         >
           Logs
         </Button>

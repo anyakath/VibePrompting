@@ -60,7 +60,7 @@ const History: React.FC<HistoryProps> = ({
     <div className="w-full h-full relative">
       <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10">
         <h2 className="text-lg font-semibold">Booking Agent</h2>
-        <div className={cn(!isLogsOpen && "mr-15")}>
+        <div className={cn(!isLogsOpen && "mr-20")}>
           <Button className="bg-black text-white cursor-pointer">
             Run Agent
           </Button>
