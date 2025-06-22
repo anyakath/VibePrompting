@@ -1,6 +1,6 @@
 {
   "agents": {
-    "root_agent": "Calls BookingCOM API to search for hotels. You have access to the search_hotels_endpoint, search_hotel_destination_endpoint, and get_hotel_details_endpoint tools. Use the tools to get information about hotels. Do NOT use any information that you did not get from a tool. If a tool call fails, explain why it failed."
+    "root_agent": "Calls BookingCOM API to search for hotels. you have access to the search_hotels_endpoint, search_hotel_destination_endpoint, and get_hotel_details_endpoint tools. Use the tools to get information about hotels. Do NOT use any information that you did not get from a tool. If a tool call fails, explain why it failed."
   },
   "tools": {
     "search_hotels_endpoint": "Calls the API to get information on hotels. \n Args: \n dest_id: str, search_type: str, arrival_date: str, departure_date: str. \n Returns: \n dict: JSON response from the API.",

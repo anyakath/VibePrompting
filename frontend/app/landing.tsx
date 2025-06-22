@@ -380,7 +380,7 @@ export default function LandingPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0">
-                        4
+                        3
                       </span>
                       Upload the ZIP file above to get started
                     </li>
