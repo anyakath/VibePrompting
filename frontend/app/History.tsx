@@ -274,7 +274,7 @@ const History: React.FC<HistoryProps> = ({
                 <Button
                   onClick={handleTrainAgent}
                   disabled={isTraining || !trainQuery.trim() || !trainIterations}
-                  className="flex-1 bg-gray-900 hover:bg-gray-800 text-white"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white"
                 >
                   {isTraining ? (
                     <div className="flex items-center gap-2">
