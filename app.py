@@ -8,6 +8,7 @@ import platform   # For detecting the operating system
 import time       # For small delays
 import zipfile    # For handling ZIP files
 import shutil     # For file operations
+import re         # For snake case conversion
 
 from prompt import get_new_json_single_edit, get_new_json_general, summarize_changes
 
@@ -347,19 +348,18 @@ def process_json_general(id):
             if not os.path.exists(history_dir):
                 os.makedirs(history_dir)
 
+            # Convert id to snake case if it's a string
+            snake_case_id = to_snake_case(id)
+            
             # Save the updated JSON to a file
-            file_path = os.path.join(history_dir, f"{id}.json")
+            file_path = os.path.join(history_dir, f"{snake_case_id}.json")
             with open(file_path, 'w') as f:
                 json.dump(updated_json, f, indent=2)
 
             # Summarize the change for node naming
             node_name = summarize_changes(prompt, context_of_changes)
 
-            return jsonify({
-                "updated_json": json.dumps(updated_json, indent=2),
-                "context_of_changes": context_of_changes,
-                "node_name": node_name
-            }), 200
+            return updated_json, 200
 
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid JSON file format"}), 400
@@ -411,6 +411,30 @@ def retrigger_adk_web():
             "status": "error",
             "message": "Failed to start ADK web server. Check server logs for details."
         }), 500
+
+def to_snake_case(text):
+    """
+    Convert a string to snake_case format.
+    Handles various input formats like camelCase, PascalCase, kebab-case, etc.
+    """
+    if not isinstance(text, str):
+        return text
+    
+    # Replace hyphens and spaces with underscores
+    text = re.sub(r'[- ]', '_', text)
+    
+    # Convert camelCase and PascalCase to snake_case
+    text = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', text)
+    text = re.sub(r'([A-Z])([A-Z][a-z])', r'\1_\2', text)
+    
+    # Convert to lowercase and remove duplicate underscores
+    text = text.lower()
+    text = re.sub(r'_+', '_', text)
+    
+    # Remove leading and trailing underscores
+    text = text.strip('_')
+    
+    return text
 
 if __name__ == '__main__':
     # You can change the host and port for your Flask app as needed
