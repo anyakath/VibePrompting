@@ -36,16 +36,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <div className="p-6 border-b border-border/50 bg-card/30">
       <div className="mb-3">
-        <h3 className="text-sm font-medium text-foreground">Generate New Prompts</h3>
+        <h3 className="text-sm font-medium text-foreground">
+          Generate New Prompts
+        </h3>
         <p className="text-xs text-muted-foreground mt-1">
-          Build off of: <span className="font-medium text-primary">{selectedNode}</span>
+          Build off of:{" "}
+          <span className="font-medium text-primary">{selectedNode}</span>
         </p>
       </div>
       <form className="flex gap-3" onSubmit={handleSubmit}>
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder={isProcessing ? "Loading..." : "Enter node name..."}
+          placeholder={
+            isProcessing ? "Loading..." : "How should your prompt be adjusted?"
+          }
           className="flex-1 bg-background/50 border-border/50 focus:border-ring focus:ring-ring/20 transition-all duration-200"
           disabled={isProcessing}
         />
@@ -65,7 +70,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="everything">Edit Everything</SelectItem>
-            <SelectItem value="search_destination">Edit Search Destination Tool</SelectItem>
+            <SelectItem value="search_destination">
+              Edit Search Destination Tool
+            </SelectItem>
             <SelectItem value="booking_tool">Edit Booking Tool</SelectItem>
             <SelectItem value="payment_tool">Edit Payment Tool</SelectItem>
             <SelectItem value="agent_1">Edit Agent 1</SelectItem>
