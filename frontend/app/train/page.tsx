@@ -205,7 +205,7 @@ export default function AppPage() {
             variant="ghost"
             size="sm"
             onClick={() => (window.location.href = "/")}
-            className="flex items-center space-x-2 hover:bg-blue-500/10 hover:text-blue-500 transition-all duration-200"
+            className="flex items-center space-x-0 hover:bg-blue-500/10 hover:text-blue-500 transition-all duration-200"
           >
             <Home className="w-4 h-4" />
             <span>Home</span>

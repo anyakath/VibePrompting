@@ -148,7 +148,7 @@ export default function LandingPage() {
                   variant="ghost"
                   size="sm"
                   onClick={openFileDialog}
-                  className="flex items-center space-x-2 hover:bg-accent/50 transition-all duration-300 hover:scale-105"
+                  className="flex items-center space-x-0 hover:bg-accent/50 transition-all duration-300 hover:scale-105"
                 >
                   <span>Upload Agent</span>
                   <ArrowRight className="w-4 h-4" />
@@ -367,25 +367,19 @@ export default function LandingPage() {
                   </h4>
                   <ol className="text-sm text-muted-foreground space-y-2">
                     <li className="flex items-start">
-                      <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">
+                      <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0">
                         1
                       </span>
                       Locate your Google ADK agent folder
                     </li>
                     <li className="flex items-start">
-                      <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">
+                      <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0">
                         2
                       </span>
-                      Select all files and folders in the agent directory
+                      Select the agent folder and compress it into a ZIP file
                     </li>
                     <li className="flex items-start">
-                      <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">
-                        3
-                      </span>
-                      Create a ZIP archive containing these files
-                    </li>
-                    <li className="flex items-start">
-                      <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">
+                      <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0">
                         4
                       </span>
                       Upload the ZIP file above to get started

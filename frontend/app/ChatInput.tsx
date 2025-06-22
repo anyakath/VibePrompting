@@ -63,22 +63,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <Send className="h-4 w-4" />
         </Button>
       </form>
-      <div className="mt-1 ml-1 flex justify-start">
-        <Select value={selectedOption} onValueChange={setSelectedOption}>
-          <SelectTrigger className="w-48 h-8 text-xs border-border/30 cursor-pointer">
-            <SelectValue placeholder="Edit Everything..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="everything">Edit Everything</SelectItem>
-            <SelectItem value="root_agent">Root Agent Instructions</SelectItem>
-            <SelectItem value="search_hotel_destination_endpoint">
-              Edit Search Hotel Destination Tool
-            </SelectItem>
-            <SelectItem value="search_hotel_destination_endpoint">Edit Search Hotels Tool</SelectItem>
-            <SelectItem value="get_hotel_details_endpoint">Edit Get Hotel Details Tool</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
     </div>
   );
 };
