@@ -16,6 +16,7 @@ import {
 } from "react-resizable-panels";
 import AgentContent from "@/lib/agent.json";
 import { Home, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AppPage() {
   const [orgChart, setOrgChart] = useState<OrgChartNode>({
@@ -34,6 +35,7 @@ export default function AppPage() {
   const [selectedNodeJson, setSelectedNodeJson] =
     useState<object>(AgentContent);
   const logsPanelRef = useRef<ImperativePanelHandle>(null);
+  const [showOverlay, setShowOverlay] = useState(true);
 
   // On mount, create a new session
   useEffect(() => {
@@ -62,6 +64,13 @@ export default function AppPage() {
       .then((data) => setSelectedNodeJson(data))
       .catch(() => setSelectedNodeJson({ error: "Failed to load JSON" }));
   }, [selectedNode, sessionId, orgChart]);
+
+  useEffect(() => {
+    if (showOverlay) {
+      const timeout = setTimeout(() => setShowOverlay(false), 600);
+      return () => clearTimeout(timeout);
+    }
+  }, [showOverlay]);
 
   const expandLogs = () => {
     logsPanelRef.current?.expand();
@@ -138,6 +147,16 @@ export default function AppPage() {
 
   return (
     <div className="h-screen w-full relative bg-background">
+      {/* Fade-in white overlay */}
+      {showOverlay && (
+        <motion.div
+          className="fixed inset-0 z-50 bg-white"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+        />
+      )}
+
       {/* Navigation Header */}
       <div className="absolute top-0 left-0 right-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between px-4 py-2">
