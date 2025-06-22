@@ -8,6 +8,7 @@ import platform   # For detecting the operating system
 import time       # For small delays
 import zipfile    # For handling ZIP files
 import shutil     # For file operations
+import re         # For snake case conversion
 import uuid
 
 from prompt import get_new_json_single_edit, get_new_json_general, summarize_changes
@@ -320,11 +321,7 @@ def process_json_general(session_id, node_id):
             # Summarize the change for node naming
             node_name = summarize_changes(prompt, context_of_changes)
 
-            return jsonify({
-                "updated_json": json.dumps(updated_json, indent=2),
-                "context_of_changes": context_of_changes,
-                "node_name": node_name
-            }), 200
+            return updated_json, 200
 
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid JSON file format"}), 400
@@ -349,7 +346,30 @@ def get_node_json(session_id, node_id):
     except Exception as e:
         return jsonify({"error": f"An error occurred while reading the node JSON file: {str(e)}"}), 500
 
-# --- API Endpoint 4: Retrigger ADK Web Server ---
+# --- API Endpoint 4: Update Agent JSON File ---
+@app.route('/update_agent_json', methods=['POST'])
+def update_agent_json():
+    try:
+        data = request.get_json()
+        if not data or 'json_data' not in data:
+            return jsonify({"error": "No JSON data provided"}), 400
+        
+        # Path to the agent.json file
+        agent_json_path = os.path.join("hotels_com_api_agent", "agent.json")
+        
+        # Write the new JSON data to the file
+        with open(agent_json_path, 'w') as f:
+            json.dump(data['json_data'], f, indent=2)
+        
+        return jsonify({
+            "status": "success",
+            "message": "Agent JSON file updated successfully"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while updating the agent JSON file: {str(e)}"}), 500
+
+# --- API Endpoint 5: Retrigger ADK Web Server ---
 @app.route('/retrigger_adk_web', methods=['POST'])
 def retrigger_adk_web():
     print(f"Received request to retrigger ADK web server on port {ADK_WEB_PORT}.")

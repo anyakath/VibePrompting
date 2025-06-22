@@ -55,8 +55,7 @@ def generate_prompt_general_with_changelog(json, instruction):
     - Do not reformat the JSON.
 
     After making the change, return:
-    1. The entire new JSON in a code block (use ```json ... ```)
-    2. On a new line, write CHANGELOG: followed by a short, plain English summary of what you changed (max 1-2 sentences).
+    The entire new JSON in a code block (use ```json ... ```)
     """
     return prompt
 
