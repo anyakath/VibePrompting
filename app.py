@@ -12,9 +12,16 @@ from prompt import get_new_json_single_edit, get_new_json_general
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
 # --- Configuration for ADK Web Server ---
 ADK_WEB_PORT = 8000  # Default port for 'adk web'. Adjust if yours is different.
-CONDA_ENV_NAME = "calhacks" # Your Conda environment name
 
 def call_single_edit_agent(input_json_data, prompt, param='root_agent'):
     """
@@ -171,37 +178,23 @@ def _kill_process_on_port(port):
             return False
 
 
-# --- Helper Function to run ADK web in background within Conda env ---
-def _start_adk_web_in_background(conda_env_name, adk_port):
-    print(f"Starting 'adk web' in background for environment '{conda_env_name}' on port {adk_port}...")
+# --- Helper Function to run ADK web in background ---
+def _start_adk_web_in_background(adk_port):
+    print(f"Starting 'adk web' in background on port {adk_port}...")
 
-    # Construct the command to activate conda env and run adk web
-    if platform.system() == "Windows":
-        # On Windows, you typically need to call conda.bat
-        conda_path = os.path.join(os.environ.get("CONDA_PREFIX", ""), "condabin", "conda.bat")
-        if not os.path.exists(conda_path):
-             conda_path = "conda" # Fallback if CONDA_PREFIX isn't set for base or conda.bat is elsewhere
-             print("Warning: Could not find conda.bat via CONDA_PREFIX. Relying on PATH.")
+    cmd = f'adk web --port {adk_port}'
 
-        cmd = f'"{conda_path}" activate {conda_env_name} && adk web --port {adk_port}'
-        creationflags = subprocess.DETACHED_PROCESS # Detach process on Windows
-        shell_arg = True
-    else: # macOS and Linux
-        # Use a non-interactive shell to source conda.sh and then run adk web
-        conda_sh_path = os.path.join(os.environ.get("CONDA_PREFIX", ""), "etc", "profile.d", "conda.sh")
-        if not os.path.exists(conda_sh_path):
-            print("Warning: Could not find conda.sh. Relying on shell's PATH for 'conda'.")
-            cmd = f'conda activate {conda_env_name} && adk web --port {adk_port}'
-        else:
-            cmd = f'bash -c "source {conda_sh_path} && conda activate {conda_env_name} && adk web --port {adk_port}"'
-
-        creationflags = 0 # Not applicable to Linux/macOS in the same way
-        shell_arg = True # Must use shell=True for `&&` or `source`
+    creationflags = 0
+    is_windows = platform.system() == "Windows"
+    if is_windows:
+        creationflags = subprocess.DETACHED_PROCESS
 
     try:
-        # Use Popen to run in background and detach
-        process = subprocess.Popen(cmd, shell=shell_arg, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                   stdin=subprocess.DEVNULL, close_fds=True, creationflags=creationflags)
+        # Use Popen to run in background and detach.
+        # On Windows, close_fds cannot be True when redirecting standard handles.
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                   stdin=subprocess.DEVNULL, close_fds=not is_windows,
+                                   creationflags=creationflags)
         print(f"  'adk web' process started with PID: {process.pid}")
         return True
     except Exception as e:
@@ -210,8 +203,8 @@ def _start_adk_web_in_background(conda_env_name, adk_port):
 
 
 # --- API Endpoint 1: Process JSON ---
-@app.route('/process_json', methods=['POST'])
-def process_json():
+@app.route('/process_json/<id>', methods=['POST'])
+def process_json(id):
     if 'json_file' not in request.files:
         return jsonify({"error": "No JSON file part in the request"}), 400
 
@@ -233,9 +226,21 @@ def process_json():
             # --- Call your custom Gemini agent logic ---
             updated_json, context_of_changes = call_general_agent(input_json_data, prompt)
 
+            # Create history directory if it doesn't exist
+            history_dir = "history"
+            if not os.path.exists(history_dir):
+                os.makedirs(history_dir)
+
+            # Save the updated JSON to a file
+            file_path = os.path.join(history_dir, f"{id}.json")
+            with open(file_path, 'w') as f:
+                # The returned 'context_of_changes' is actually the updated JSON string
+                f.write(context_of_changes)
+
+
             return jsonify({
-                "updated_json": updated_json,
-                "context_of_changes": context_of_changes
+                "updated_json": json.loads(context_of_changes), # parse string to json
+                "context_of_changes": "JSON processed and saved."
             }), 200
 
         except json.JSONDecodeError:
@@ -245,8 +250,24 @@ def process_json():
     else:
         return jsonify({"error": "An unexpected error occurred with the file upload"}), 500
 
+# --- NEW API Endpoint 2: Get History ---
+@app.route('/history/<id>', methods=['GET'])
+def get_history(id):
+    history_dir = "history"
+    file_path = os.path.join(history_dir, f"{id}.json")
 
-# --- NEW API Endpoint 2: Retrigger ADK Web Server ---
+    if not os.path.exists(file_path):
+        return jsonify({"error": "History not found for the given ID"}), 404
+
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while reading the history file: {str(e)}"}), 500
+
+
+# --- NEW API Endpoint 3: Retrigger ADK Web Server ---
 @app.route('/retrigger_adk_web', methods=['POST'])
 def retrigger_adk_web():
     print(f"Received request to retrigger ADK web server on port {ADK_WEB_PORT}.")
@@ -260,7 +281,7 @@ def retrigger_adk_web():
     time.sleep(1)
 
     # 2. Start new ADK web server process
-    start_success = _start_adk_web_in_background(CONDA_ENV_NAME, ADK_WEB_PORT)
+    start_success = _start_adk_web_in_background(ADK_WEB_PORT)
 
     if start_success:
         return jsonify({

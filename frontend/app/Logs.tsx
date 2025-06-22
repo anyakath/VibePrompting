@@ -2,7 +2,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { PanelRightClose } from "lucide-react";
+import { PanelRightClose, Activity } from "lucide-react";
 import { Message } from "@/lib/types";
 
 interface LogsProps {
@@ -13,33 +13,62 @@ interface LogsProps {
 
 const Logs: React.FC<LogsProps> = ({ selectedNode, toggleLogs, messages }) => {
   return (
-    <div className="w-full flex flex-col h-full">
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center">
+    <div className="w-full flex flex-col h-full bg-card/30">
+      <div className="p-4 border-b border-border/50 bg-card/50">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold text-foreground">Activity Logs</h2>
+          </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleLogs}
-            className="cursor-pointer -ml-2"
+            className="h-6 w-6 hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
           >
-            <PanelRightClose className="h-5 w-5" />
+            <PanelRightClose className="h-3 w-3" />
           </Button>
-          <h2 className="text-lg font-semibold">Logs</h2>
         </div>
-        <p className="text-sm text-gray-600 mt-1">Selected: {selectedNode}</p>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">Selected:</span>
+          <span className="font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded text-xs">
+            {selectedNode}
+          </span>
+        </div>
       </div>
 
-      <>
-        <ScrollArea className="flex-1 p-4 min-h-0">
-          <div className="flex flex-col gap-2">
-            {messages.map((message) => (
-              <div key={message.id} className="italic text-gray-700 text-sm">
-                {message.content}
+      <ScrollArea className="flex-1 p-4 min-h-0 scrollbar-thin">
+        <div className="flex flex-col gap-3">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                <p className="text-base text-muted-foreground mb-2">No activity yet</p>
+                <p className="text-sm text-muted-foreground/70">
+                  Actions will appear here as you interact with the system
+                </p>
               </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </>
+            </div>
+          ) : (
+            messages.map((message) => (
+              <div 
+                key={message.id} 
+                className="flex items-start gap-2 p-2.5 bg-background/50 rounded border border-border/30 hover:bg-background/70 transition-colors duration-200"
+              >
+                <div className="w-1.5 h-1.5 bg-primary/60 rounded-full mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground leading-relaxed">
+                    {message.content}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(parseInt(message.id)).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 };

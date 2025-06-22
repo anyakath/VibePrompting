@@ -53,7 +53,7 @@ export default function Home() {
 
     try {
       // Make API call to Flask backend with file upload
-      const response = await fetch("http://localhost:5000/process_json", {
+      const response = await fetch("http://localhost:5000/process_json/1", {
         method: "POST",
         body: formData,
       });
@@ -107,12 +107,12 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen w-full relative">
-      <PanelGroup direction="horizontal">
+    <div className="h-screen w-full relative bg-background">
+      <PanelGroup direction="horizontal" className="h-full">
         <Panel>
-          <PanelGroup direction="vertical">
+          <PanelGroup direction="vertical" className="h-full">
             <Panel>
-              <div className="overflow-auto h-full">
+              <div className="overflow-auto h-full scrollbar-thin">
                 <History
                   orgChart={orgChart}
                   selectedNode={selectedNode}
@@ -121,22 +121,26 @@ export default function Home() {
                 />
               </div>
             </Panel>
-            <PanelResizeHandle className="h-1 bg-gray-200 hover:bg-gray-300 transition-colors" />
+            <PanelResizeHandle className="h-1 bg-border hover:bg-ring/50 transition-colors duration-200 group">
+              <div className="w-8 h-1 bg-muted-foreground/20 rounded-full mx-auto group-hover:bg-muted-foreground/40 transition-colors duration-200" />
+            </PanelResizeHandle>
             <Panel defaultSize={40} minSize={20} collapsible>
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full bg-card/50">
                 <ChatInput
                   selectedNode={selectedNode}
                   onSendMessage={handleAddNode}
                   isProcessing={isProcessing}
                 />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 overflow-auto scrollbar-thin">
                   <AgentEditor />
                 </div>
               </div>
             </Panel>
           </PanelGroup>
         </Panel>
-        <PanelResizeHandle className="w-px bg-gray-300" />
+        <PanelResizeHandle className="w-1 bg-border hover:bg-ring/50 transition-colors duration-200 group flex items-center justify-center">
+          <div className="h-8 w-1 bg-muted-foreground/20 rounded-full group-hover:bg-muted-foreground/40 transition-colors duration-200" />
+        </PanelResizeHandle>
         <Panel
           ref={logsPanelRef}
           defaultSize={25}
@@ -158,7 +162,7 @@ export default function Home() {
       {!isLogsOpen && (
         <Button
           onClick={expandLogs}
-          className="absolute top-4 right-4 z-10 bg-white text-black border border-gray-300 hover:bg-gray-100 rounded-md px-4 py-2 cursor-pointer"
+          className="absolute top-5.5 right-4 z-10 bg-card text-card-foreground border border-border hover:bg-accent hover:text-accent-foreground rounded-lg px-4 py-2 h-auto cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md"
         >
           Logs
         </Button>

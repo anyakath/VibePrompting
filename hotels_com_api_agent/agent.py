@@ -7,7 +7,7 @@ import json
 from os import path
 
 basepath = path.dirname(__file__)
-filepath = path.abspath(path.join(basepath, "prompts.json"))
+filepath = path.abspath(path.join(basepath, "agent.json"))
 
 with open(filepath) as json_data:
   data = json.load(json_data)

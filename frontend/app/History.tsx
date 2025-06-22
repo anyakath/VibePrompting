@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { OrgChartNode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -34,53 +34,53 @@ const renderCustomNode = ({
       {/* Glow effect for selected node */}
       {isSelected && (
         <circle
-          r={20}
+          r={22}
           fill="url(#selectedGlow)"
-          opacity="0.4"
+          opacity="0.3"
           filter="url(#glow)"
         />
       )}
 
-      {/* Main node circle with gradient */}
-      <circle
-        r={15}
-        fill={isSelected ? "url(#selectedGradient)" : "url(#defaultGradient)"}
-        strokeWidth={isSelected ? 3 : 2}
-        stroke={isSelected ? "#374151" : "#d1d5db"}
-        onClick={onNodeClick}
-        className="cursor-pointer transition-all duration-200 hover:r-18"
-        filter={isSelected ? "url(#shadow)" : "none"}
-      />
-
-      {/* Node label with better styling */}
+      {/* Node label positioned above the node */}
       <text
         strokeWidth="0"
         x="0"
-        y="35"
+        y="-30"
         textAnchor="middle"
         className={cn(
-          "text-sm font-medium transition-all duration-200",
-          isSelected ? "fill-gray-900 font-semibold" : "fill-gray-700"
+          "text-sm font-medium transition-all duration-300",
+          isSelected ? "fill-foreground font-semibold" : "fill-muted-foreground"
         )}
         style={{
-          textShadow: isSelected ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
+          textShadow: isSelected ? "0 1px 3px rgba(0,0,0,0.15)" : "none",
           fontSize: isSelected ? "14px" : "13px",
         }}
       >
         {nodeDatum.name}
       </text>
 
+      {/* Main node circle with gradient */}
+      <circle
+        r={16}
+        fill={isSelected ? "url(#selectedGradient)" : "url(#defaultGradient)"}
+        strokeWidth={isSelected ? 3 : 2}
+        stroke={isSelected ? "url(#selectedStroke)" : "url(#defaultStroke)"}
+        onClick={onNodeClick}
+        className="cursor-pointer transition-all duration-300 hover:r-18"
+        filter={isSelected ? "url(#shadow)" : "none"}
+      />
+
       {/* Hover effect indicator */}
       <circle
-        r={15}
+        r={16}
         fill="transparent"
         stroke="transparent"
         onClick={onNodeClick}
         className="cursor-pointer"
         onMouseEnter={(e) => {
-          e.currentTarget.style.stroke = "#374151";
+          e.currentTarget.style.stroke = "url(#hoverStroke)";
           e.currentTarget.style.strokeWidth = "2";
-          e.currentTarget.style.opacity = "0.3";
+          e.currentTarget.style.opacity = "0.4";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.stroke = "transparent";
@@ -98,31 +98,142 @@ const History: React.FC<HistoryProps> = ({
   setSelectedNode,
   isLogsOpen,
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAgentRunning, setIsAgentRunning] = useState(false);
+
   const handleNodeClick = (nodeData: TreeNodeDatum) => {
     setSelectedNode(nodeData.name);
   };
 
+  const checkIfServerReady = async (): Promise<boolean> => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+
+      await fetch("http://localhost:8000", {
+        method: "HEAD",
+        mode: "no-cors",
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Check if agent is running on component mount
+  React.useEffect(() => {
+    const checkAgentStatus = async () => {
+      const isRunning = await checkIfServerReady();
+      setIsAgentRunning(isRunning);
+    };
+
+    checkAgentStatus();
+  }, []);
+
+  const waitForServer = async (): Promise<void> => {
+    const maxAttempts = 30; // 30 seconds max
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const isReady = await checkIfServerReady();
+      if (isReady) {
+        setIsAgentRunning(true);
+        return;
+      }
+
+      attempts++;
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
+    }
+
+    throw new Error("Server not ready after 30 seconds");
+  };
+
+  const handleRunAgent = async () => {
+    if (isLoading) return; // Prevent multiple simultaneous requests
+
+    // If agent is already running, just open the interface
+    if (isAgentRunning) {
+      window.open("http://localhost:8000", "_blank");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Trigger ADK web restart
+      await fetch("http://localhost:5000/retrigger_adk_web", {
+        method: "POST",
+      });
+
+      // Wait for server to be ready
+      await waitForServer();
+
+      // Open localhost:8000 in a new tab
+      window.open("http://localhost:8000", "_blank");
+    } catch (error) {
+      console.error("Error starting agent:", error);
+      // You could show an error message here if needed
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="w-full h-full relative">
-      {/* Simple header */}
-      <div
-        className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 backdrop-blur-sm"
-        style={{ backgroundColor: "transparent" }}
-      >
-        <h2 className="text-lg font-semibold text-gray-900">Booking Agent</h2>
-        <div className={cn(!isLogsOpen && "mr-20")}>
-          <Button className="bg-gray-900 text-white hover:bg-gray-800">
-            Run Agent
+      {/* Enhanced header */}
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-10">
+        <h2 className="text-lg mt-[-5px] font-semibold text-gray-900">
+          Booking Agent
+        </h2>
+        <div className={cn(!isLogsOpen && "mr-16")}>
+          <Button
+            className={cn(
+              "text-white",
+              isAgentRunning
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-black hover:bg-gray-900"
+            )}
+            onClick={handleRunAgent}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Starting...
+              </div>
+            ) : isAgentRunning ? (
+              "Agent Running"
+            ) : (
+              "Run Agent"
+            )}
           </Button>
         </div>
       </div>
 
       {/* Tree container */}
-      <div className="w-full h-full pt-20">
+      <div className="w-full h-full">
         <Tree
           data={orgChart}
           orientation="horizontal"
-          translate={{ x: 150, y: 170 }}
+          translate={{ x: 150, y: 260 }}
           zoomable={true}
           draggable={true}
           collapsible={false}
@@ -153,11 +264,17 @@ const History: React.FC<HistoryProps> = ({
             >
               <stop
                 offset="0%"
-                style={{ stopColor: "#f3f4f6", stopOpacity: 1 }}
+                style={{
+                  stopColor: "oklch(0.98 0.002 247.858)",
+                  stopOpacity: 1,
+                }}
               />
               <stop
                 offset="100%"
-                style={{ stopColor: "#e5e7eb", stopOpacity: 1 }}
+                style={{
+                  stopColor: "oklch(0.95 0.007 247.896)",
+                  stopOpacity: 1,
+                }}
               />
             </linearGradient>
 
@@ -171,11 +288,86 @@ const History: React.FC<HistoryProps> = ({
             >
               <stop
                 offset="0%"
-                style={{ stopColor: "#ffffff", stopOpacity: 1 }}
+                style={{ stopColor: "oklch(1 0 0)", stopOpacity: 1 }}
               />
               <stop
                 offset="100%"
-                style={{ stopColor: "#f9fafb", stopOpacity: 1 }}
+                style={{
+                  stopColor: "oklch(0.98 0.002 247.858)",
+                  stopOpacity: 1,
+                }}
+              />
+            </linearGradient>
+
+            {/* Selected stroke gradient */}
+            <linearGradient
+              id="selectedStroke"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                style={{
+                  stopColor: "oklch(0.25 0.042 265.755)",
+                  stopOpacity: 1,
+                }}
+              />
+              <stop
+                offset="100%"
+                style={{
+                  stopColor: "oklch(0.3 0.042 265.755)",
+                  stopOpacity: 1,
+                }}
+              />
+            </linearGradient>
+
+            {/* Default stroke gradient */}
+            <linearGradient
+              id="defaultStroke"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                style={{
+                  stopColor: "oklch(0.85 0.013 255.508)",
+                  stopOpacity: 1,
+                }}
+              />
+              <stop
+                offset="100%"
+                style={{
+                  stopColor: "oklch(0.8 0.013 255.508)",
+                  stopOpacity: 1,
+                }}
+              />
+            </linearGradient>
+
+            {/* Hover stroke gradient */}
+            <linearGradient
+              id="hoverStroke"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                style={{
+                  stopColor: "oklch(0.25 0.042 265.755)",
+                  stopOpacity: 0.6,
+                }}
+              />
+              <stop
+                offset="100%"
+                style={{
+                  stopColor: "oklch(0.3 0.042 265.755)",
+                  stopOpacity: 0.6,
+                }}
               />
             </linearGradient>
 
@@ -189,17 +381,23 @@ const History: React.FC<HistoryProps> = ({
             >
               <stop
                 offset="0%"
-                style={{ stopColor: "#374151", stopOpacity: 0.2 }}
+                style={{
+                  stopColor: "oklch(0.25 0.042 265.755)",
+                  stopOpacity: 0.3,
+                }}
               />
               <stop
                 offset="100%"
-                style={{ stopColor: "#6b7280", stopOpacity: 0.1 }}
+                style={{
+                  stopColor: "oklch(0.4 0.042 265.755)",
+                  stopOpacity: 0.1,
+                }}
               />
             </linearGradient>
 
             {/* Filters */}
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
               <feMerge>
                 <feMergeNode in="coloredBlur" />
                 <feMergeNode in="SourceGraphic" />
@@ -209,10 +407,10 @@ const History: React.FC<HistoryProps> = ({
             <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
               <feDropShadow
                 dx="0"
-                dy="2"
-                stdDeviation="4"
-                floodColor="#374151"
-                floodOpacity="0.2"
+                dy="3"
+                stdDeviation="5"
+                floodColor="oklch(0.15 0.042 264.695)"
+                floodOpacity="0.15"
               />
             </filter>
           </defs>
@@ -221,19 +419,13 @@ const History: React.FC<HistoryProps> = ({
           <style>
             {`
               .connection-line {
-                stroke: #d1d5db;
+                stroke: oklch(0.85 0.013 255.508);
                 stroke-width: 2.5;
                 stroke-linecap: round;
                 stroke-linejoin: round;
                 stroke-dasharray: 8, 4;
-                opacity: 0.7;
+                opacity: 0.6;
                 transition: all 0.3s ease;
-              }
-
-              .connection-line:hover {
-                stroke-width: 3;
-                opacity: 1;
-                stroke-dasharray: 12, 6;
               }
             `}
           </style>
