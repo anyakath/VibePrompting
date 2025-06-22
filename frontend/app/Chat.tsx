@@ -5,16 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
 import { useState } from "react";
-import { Message } from "@/lib/types";
+import { Message, OrgChartNode } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { appendChildToOrgChart, addChildToNodeByName } from "@/lib/utils";
 
-const Chat = () => {
+interface ChatProps {
+  setOrgChart: React.Dispatch<React.SetStateAction<OrgChartNode>>;
+  selectedNode: string | null;
+}
+
+const Chat: React.FC<ChatProps> = ({ setOrgChart, selectedNode }) => {
   // TODO: Load this from backend
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       content:
-        "Welcome to the tree visualization! Click on nodes to navigate or create new ones.",
+        "Welcome to the tree visualization! Click on nodes to select them, then type a name here to add a child node.",
       sender: "system",
     },
   ]);
@@ -31,26 +37,47 @@ const Chat = () => {
     };
 
     setMessages([...messages, userMessage]);
-    setInputValue("");
 
-    // We probably won't need a timeout when this is linked to backend lol
-    setTimeout(() => {
+    // Add the new node to the org chart
+    if (selectedNode) {
+      // Add child to the selected node
+      setOrgChart((prevChart) =>
+        addChildToNodeByName(prevChart, selectedNode, inputValue.trim())
+      );
+
       const systemMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `You said: ${inputValue}. Creating a new node...`,
+        content: `Added "${inputValue.trim()}" as a child of "${selectedNode}"`,
         sender: "system",
       };
       setMessages((prev) => [...prev, systemMessage]);
-    }, 1000);
+    } else {
+      // Fallback to adding to root if no node is selected
+      setOrgChart((prevChart) =>
+        appendChildToOrgChart(prevChart, inputValue.trim())
+      );
+
+      const systemMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `Added "${inputValue.trim()}" to the root level`,
+        sender: "system",
+      };
+      setMessages((prev) => [...prev, systemMessage]);
+    }
+
+    setInputValue("");
   };
 
   return (
     <div className="w-full border-l border-gray-200 flex flex-col h-full">
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold">Fix your agent</h2>
+        {selectedNode && (
+          <p className="text-sm text-gray-600 mt-1">Selected: {selectedNode}</p>
+        )}
       </div>
 
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4 min-h-0">
         <div className="flex flex-col gap-4">
           {messages.map((message) => (
             <div
@@ -79,7 +106,11 @@ const Chat = () => {
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="What do you want to change?"
+            placeholder={
+              selectedNode
+                ? `Add child to ${selectedNode}...`
+                : "Type a name to add to root..."
+            }
             className="flex-1"
           />
           <Button type="submit" size="icon" className="bg-black text-white">

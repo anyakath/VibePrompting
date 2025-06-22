@@ -1,67 +1,41 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import dynamic from "next/dynamic";
-import { Button } from "@/components/ui/button";
-import { appendChildToOrgChart, addChildToNodeByName } from "@/lib/utils";
 import { OrgChartNode } from "@/lib/types";
 
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
 
-const History = () => {
-  const [orgChart, setOrgChart] = useState<OrgChartNode>({
-    name: "CEO",
-    children: [
-      {
-        name: "Manager",
-        attributes: {
-          Department: "Production",
-          bread: "Yes",
-        },
-        children: [],
-      },
-      {
-        name: "Another Manager",
-        attributes: {
-          Department: "Production",
-          bread: "Yes",
-        },
-        children: [],
-      },
-    ],
-  });
+interface HistoryProps {
+  orgChart: OrgChartNode;
+  setOrgChart: React.Dispatch<React.SetStateAction<OrgChartNode>>;
+  selectedNode: string | null;
+  setSelectedNode: React.Dispatch<React.SetStateAction<string | null>>;
+}
 
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
-
-  const handleNodeClick = (nodeData: any) => {
+const History: React.FC<HistoryProps> = ({
+  orgChart,
+  selectedNode,
+  setSelectedNode,
+}) => {
+  const handleNodeClick = (nodeData: { data: { name: string } }) => {
     setSelectedNode(nodeData.data.name);
-  };
-
-  const handleAddChild = () => {
-    if (selectedNode) {
-      // Add child to the selected node
-      setOrgChart((prevChart) =>
-        addChildToNodeByName(prevChart, selectedNode, "New Employee")
-      );
-    } else {
-      // Fallback to adding to root if no node is selected
-      setOrgChart((prevChart) =>
-        appendChildToOrgChart(prevChart, "New Employee")
-      );
-    }
   };
 
   return (
     <div
       className="w-[2000px] h-full" // MAYBE: make this width expand if the tree gets too long (or just hard code idk)
     >
-      <div className="mb-4">
-        <Button onClick={handleAddChild}>
-          Add Child {selectedNode ? `to ${selectedNode}` : "to Root"}
-        </Button>
-        {selectedNode && (
-          <span className="ml-4 text-sm text-gray-600">
-            Selected: {selectedNode}
+      <div className="mb-4 p-4">
+        {selectedNode ? (
+          <span className="text-sm text-gray-600">
+            Selected: {selectedNode} - Type a name in the chat to add a child
+            node
+          </span>
+        ) : (
+          <span className="text-sm text-gray-600">
+            Click on a node to select it, then type a name in the chat to add a
+            child
           </span>
         )}
       </div>
