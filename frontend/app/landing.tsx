@@ -2,22 +2,34 @@
 
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, File, Sparkles, Bot, Code, Zap, ArrowRight } from "lucide-react";
+import {
+  Upload,
+  File,
+  Sparkles,
+  Bot,
+  Code,
+  Zap,
+  ArrowRight,
+} from "lucide-react";
 
 export default function LandingPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.zip')) {
-      alert("Please upload a ZIP file containing your Google ADK agent folder.");
+    if (!file.name.endsWith(".zip")) {
+      alert(
+        "Please upload a ZIP file containing your Google ADK agent folder."
+      );
       return;
     }
 
     // Immediately redirect to train page
-    window.location.href = '/train';
+    window.location.href = "/train";
   };
 
   const handleDragOver = (event: React.DragEvent) => {
@@ -29,13 +41,17 @@ export default function LandingPage() {
     const files = event.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
-      if (file.name.endsWith('.zip')) {
+      if (file.name.endsWith(".zip")) {
         if (fileInputRef.current) {
           fileInputRef.current.files = files;
-          handleFileUpload({ target: { files } } as React.ChangeEvent<HTMLInputElement>);
+          handleFileUpload({
+            target: { files },
+          } as React.ChangeEvent<HTMLInputElement>);
         }
       } else {
-        alert("Please upload a ZIP file containing your Google ADK agent folder.");
+        alert(
+          "Please upload a ZIP file containing your Google ADK agent folder."
+        );
       }
     }
   };
@@ -49,7 +65,7 @@ export default function LandingPage() {
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)]" />
-      
+
       {/* Floating Elements */}
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse delay-1000" />
@@ -91,7 +107,7 @@ export default function LandingPage() {
                   AI-Powered Agent Enhancement
                 </span>
               </div>
-              
+
               <h1 className="text-5xl md:text-7xl font-bold mb-6">
                 <span className="bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
                   Transform Your
@@ -101,9 +117,11 @@ export default function LandingPage() {
                   Google ADK Agents
                 </span>
               </h1>
-              
+
               <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Enhance your AI agents with optimized meta prompting infrastructure, featuring AI-generated prompting, validated with state-of-the-art evals and dynamic git-like version control.
+                Enhance your AI agents with optimized meta prompting
+                infrastructure, featuring AI-generated prompting, validated with
+                state-of-the-art evals and dynamic git-like version control.
               </p>
             </div>
 
@@ -132,7 +150,8 @@ export default function LandingPage() {
                 Powerful Features for Modern AI Agents
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Everything you need to create intelligence dynamic agentic systems
+                Everything you need to create intelligence dynamic agentic
+                systems
               </p>
             </div>
 
@@ -141,31 +160,38 @@ export default function LandingPage() {
                 {
                   icon: Bot,
                   title: "AI Agent Enhancement",
-                  description: "Upload your Google ADK agent and enhance it with intelligent prompting capabilities and dynamic responses.",
-                  color: "text-blue-600"
+                  description:
+                    "Upload your Google ADK agent and enhance it with intelligent prompting capabilities and dynamic responses.",
+                  color: "text-blue-600",
                 },
                 {
                   icon: Code,
                   title: "Dynamic Conversations",
-                  description: "Create branching conversation flows and context-aware agent responses that adapt to user interactions.",
-                  color: "text-green-600"
+                  description:
+                    "Create branching conversation flows and context-aware agent responses that adapt to user interactions.",
+                  color: "text-green-600",
                 },
                 {
                   icon: Zap,
                   title: "Real-Time Reinforcement Learning",
-                  description: "Train your prompts, leveraging evaluation metrics and a reinforcement learning pipeline to optimize agentic system prompts.",
-                  color: "text-purple-600"
-                }
+                  description:
+                    "Train your prompts, leveraging evaluation metrics and a reinforcement learning pipeline to optimize agentic system prompts.",
+                  color: "text-purple-600",
+                },
               ].map((feature, index) => (
                 <div
                   key={index}
                   className="group bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 hover:bg-card/80 hover:border-primary/20 transition-all duration-300 hover:shadow-lg"
                 >
-                  <div className={`w-12 h-12 rounded-lg bg-accent/50 flex items-center justify-center mb-4 group-hover:bg-accent/80 transition-colors`}>
+                  <div className="w-12 h-12 rounded-lg bg-accent/50 flex items-center justify-center mb-4 group-hover:bg-accent/80 transition-colors">
                     <feature.icon className={`w-6 h-6 ${feature.color}`} />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                  <h3 className="text-xl font-semibold mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
               ))}
             </div>
@@ -180,7 +206,8 @@ export default function LandingPage() {
                 Get Started in Minutes
               </h2>
               <p className="text-lg text-muted-foreground">
-                Upload your Google ADK agent and start enhancing it with intelligent prompting
+                Upload your Google ADK agent and start enhancing it with
+                intelligent prompting
               </p>
             </div>
 
@@ -197,20 +224,24 @@ export default function LandingPage() {
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-                
+
                 <div className="space-y-6">
                   <div className="flex justify-center">
                     <div className="relative">
-                      <Upload className={`w-16 h-16 transition-all duration-300`} />
+                      <Upload className="w-16 h-16 transition-all duration-300" />
                       <div className="absolute inset-0 bg-primary/10 rounded-full blur-lg" />
                     </div>
                   </div>
-                  
+
                   <div>
-                    <p className="text-xl font-semibold mb-2">Drop your ZIP file here</p>
-                    <p className="text-muted-foreground">or click to browse files</p>
+                    <p className="text-xl font-semibold mb-2">
+                      Drop your ZIP file here
+                    </p>
+                    <p className="text-muted-foreground">
+                      or click to browse files
+                    </p>
                   </div>
-                  
+
                   <Button
                     onClick={openFileDialog}
                     variant="outline"
@@ -220,7 +251,6 @@ export default function LandingPage() {
                     Choose File
                   </Button>
                 </div>
-
               </div>
 
               {/* Instructions */}
@@ -231,19 +261,27 @@ export default function LandingPage() {
                 </h4>
                 <ol className="text-sm text-muted-foreground space-y-2">
                   <li className="flex items-start">
-                    <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">1</span>
+                    <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">
+                      1
+                    </span>
                     Locate your Google ADK agent folder
                   </li>
                   <li className="flex items-start">
-                    <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">2</span>
+                    <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">
+                      2
+                    </span>
                     Select all files and folders in the agent directory
                   </li>
                   <li className="flex items-start">
-                    <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">3</span>
+                    <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">
+                      3
+                    </span>
                     Create a ZIP archive containing these files
                   </li>
                   <li className="flex items-start">
-                    <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">4</span>
+                    <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3 mt-0.5">
+                      4
+                    </span>
                     Upload the ZIP file above to get started
                   </li>
                 </ol>
@@ -260,7 +298,8 @@ export default function LandingPage() {
               <span className="text-lg font-semibold">VibePrompting</span>
             </div>
             <p className="text-muted-foreground">
-              Built with Next.js, Flask, and Google ADK • Empowering the future of conversational AI
+              Built with Next.js, Flask, and Google ADK • Empowering the future
+              of conversational AI
             </p>
           </div>
         </footer>
@@ -268,4 +307,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
