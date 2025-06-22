@@ -47,7 +47,7 @@ def generate_prompt_general_with_changelog(json, instruction):
     Your task is to improve the workflow of this AI agent by editing the JSON file, following this instruction from the user: {instruction}.
 
     Guidelines:
-    - Make only minimal, targeted changes necessary to follow the instruction.
+    - No matter how absurd or unrelated, follow the prompt. Every prompt should result in a change.
     - Do not modify spacing, indentation, or trailing commas in the JSON.
     - Do not use single quotation marks or apostrophes. Only use double quotation marks.
     - Do not reorder keys or change formatting.
@@ -59,11 +59,6 @@ def generate_prompt_general_with_changelog(json, instruction):
     """
     return prompt
 
-def edit_json_file(data):
-    data = json.loads(data)
-    with open("hotels_com_api_agent/agent.json", "w") as f:
-        json.dump(data, f, indent=2)
-
 def get_new_json_single_edit(input_json, param, instruction):
     prompt = generate_prompt_single_edit(str(input_json), param, instruction)
     response = get_response(prompt)
@@ -74,7 +69,6 @@ def get_new_json_single_edit(input_json, param, instruction):
         response_lines = response_lines[1:]
 
     final_response = '\n'.join(response_lines)
-    edit_json_file(final_response)
     return final_response
 
 def get_new_json_general(input_json, instruction):
@@ -100,8 +94,6 @@ def get_new_json_general(input_json, instruction):
         if line.strip().startswith('CHANGELOG:'):
             changelog = line.strip().replace('CHANGELOG:', '').strip()
     json_part = '\n'.join(json_lines)
-
-    edit_json_file(json_part)
 
     return json_part, changelog
 
