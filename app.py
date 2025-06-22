@@ -9,7 +9,7 @@ import platform   # For detecting the operating system
 import time       # For small delays
 
 # Assuming 'prompt.py' exists and contains 'get_new_json'
-# from prompt import get_new_json_single_edit, get_new_json_general
+from prompt import get_new_json_single_edit, get_new_json_general
 
 app = Flask(__name__)
 
@@ -151,7 +151,7 @@ def _kill_process_on_port(port):
             if not pids_output:
                 print(f"  No process found on port {port}.")
                 return True # No process to kill is a success
-            
+
             pids = pids_output.splitlines()
             for pid in pids:
                 print(f"  Attempting to kill PID: {pid} with 'sudo kill -9 {pid}'")
@@ -175,7 +175,7 @@ def _kill_process_on_port(port):
 # --- Helper Function to run ADK web in background within Conda env ---
 def _start_adk_web_in_background(conda_env_name, adk_port):
     print(f"Starting 'adk web' in background for environment '{conda_env_name}' on port {adk_port}...")
-    
+
     # Construct the command to activate conda env and run adk web
     if platform.system() == "Windows":
         # On Windows, you typically need to call conda.bat
@@ -195,13 +195,13 @@ def _start_adk_web_in_background(conda_env_name, adk_port):
             cmd = f'conda activate {conda_env_name} && adk web --port {adk_port}'
         else:
             cmd = f'bash -c "source {conda_sh_path} && conda activate {conda_env_name} && adk web --port {adk_port}"'
-        
+
         creationflags = 0 # Not applicable to Linux/macOS in the same way
         shell_arg = True # Must use shell=True for `&&` or `source`
 
     try:
         # Use Popen to run in background and detach
-        process = subprocess.Popen(cmd, shell=shell_arg, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+        process = subprocess.Popen(cmd, shell=shell_arg, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                    stdin=subprocess.DEVNULL, close_fds=True, creationflags=creationflags)
         print(f"  'adk web' process started with PID: {process.pid}")
         return True
@@ -256,9 +256,9 @@ def retrigger_adk_web():
     kill_success = _kill_process_on_port(ADK_WEB_PORT)
     if not kill_success:
         print("  Warning: Failed to kill existing ADK web process, attempting restart anyway.")
-    
+
     # Give a tiny moment for the port to free up if a process was just killed
-    time.sleep(1) 
+    time.sleep(1)
 
     # 2. Start new ADK web server process
     start_success = _start_adk_web_in_background(CONDA_ENV_NAME, ADK_WEB_PORT)
