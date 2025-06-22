@@ -158,9 +158,23 @@ const History: React.FC<HistoryProps> = ({
   const handleRunAgent = async () => {
     if (isLoading) return; // Prevent multiple simultaneous requests
 
-    // If agent is already running, just open the interface
+    // If agent is already running, refresh the server
     if (isAgentRunning) {
-      window.open("http://localhost:8000", "_blank");
+      setIsLoading(true);
+      try {
+        // Trigger ADK web restart
+        await fetch("http://localhost:5000/retrigger_adk_web", {
+          method: "POST",
+        });
+
+        // Wait for server to be ready
+        await waitForServer();
+
+      } catch (error) {
+        console.error("Error refreshing agent:", error);
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
 
@@ -222,6 +236,43 @@ const History: React.FC<HistoryProps> = ({
         </h2>
         
         <div className={cn("flex flex-col space-y-4 pointer-events-auto", !isLogsOpen && "mr-16")}>
+          <Button
+            className={cn(
+              "text-white",
+              isAgentRunning
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-black hover:bg-gray-900"
+            )}
+            onClick={handleRunAgent}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                {isAgentRunning ? "Refreshing..." : "Starting..."}
+              </div>
+            ) : isAgentRunning ? (
+              "Refresh Server"
+            ) : (
+              "Run Agent"
+            )}
+          </Button>
+          
           {/* Train Your Agent Section */}
           <div className="w-72">
             <div className="flex items-center gap-2 mb-4">
