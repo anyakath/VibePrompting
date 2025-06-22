@@ -26,6 +26,8 @@ def generate_prompt_single_edit(json, param, instruction):
 
     Do not modify any other lines, spacing, indentation, or trailing commas in the JSON.
 
+    Do not use single quotation marks or apostrophes. Only use double quotation marks.
+
     Do not reorder keys or change formatting.
 
     Do not reformat the JSON or adjust quotes.
@@ -48,6 +50,8 @@ def generate_prompt_general(json, instruction):
     Make only minimal, targeted changes necessary to follow the instruction.
 
     Do not modify spacing, indentation, or trailing commas in the JSON.
+
+    Do not use single quotation marks or apostrophes. Only use double quotation marks.
 
     Do not reorder keys or change formatting.
 
