@@ -1,35 +1,277 @@
+# from flask import Flask, request, jsonify
+# import json
+# from werkzeug.utils import secure_filename
+# import os
+# import datetime
+# import requests
+# from prompt import get_new_json
+# import subprocess # <--- For running shell commands
+# import platform   # <--- For detecting the operating system
+# import time       # <--- For small delays
+
+
+# app = Flask(__name__)
+
+# ADK_WEB_PORT = 8000  # Default port for 'adk web'. Adjust if yours is different.
+# CONDA_ENV_NAME = "calhacks" # Your Conda environment name
+
+# ####################################
+# # Code for the adk trigger 
+
+# def _kill_process_on_port(port):
+#     print(f"Attempting to kill processes on port {port}...")
+#     if platform.system() == "Windows":
+#         # Windows command to find PID and kill
+#         try:
+#             output = subprocess.check_output(f"netstat -ano | findstr :{port}", shell=True).decode()
+#             pids = [line.strip().split()[-1] for line in output.splitlines() if line.strip()]
+#             for pid in set(pids): # Use set to avoid killing the same PID multiple times
+#                 print(f"  Killing process with PID: {pid}")
+#                 subprocess.run(f"taskkill /F /PID {pid}", shell=True, check=True, capture_output=True)
+#             print(f"  Successfully killed processes on port {port} (Windows).")
+#             return True
+#         except subprocess.CalledProcessError as e:
+#             #print(f"  No process found or failed to kill on port {port}: {e.stderr.decode().strip()}")
+#             error_output = e.stderr.decode('utf-8', errors='ignore')
+#             print(f"  Error running netstat/taskkill (Windows): {error_output.strip()}")
+#             return False
+#         except Exception as e:
+#             print(f"  Unexpected error killing process on port {port} (Windows): {e}")
+#             return False
+#     else: # macOS and Linux
+#         try:
+#             # Find PID using lsof, exclude the current process if it's Flask itself
+#             lsof_cmd = f"sudo lsof -ti :{port}" # -t for PID only, -i for internet connections
+#             pids_output = subprocess.check_output(lsof_cmd, shell=True, text=True).strip()
+#             if not pids_output:
+#                 print(f"  No process found on port {port}.")
+#                 return True # No process to kill is a success
+            
+#             pids = pids_output.splitlines()
+#             for pid in pids:
+#                 print(f"  Killing process with PID: {pid}")
+#                 # Use sudo kill -9 for a forceful kill, as the user might not own the process (e.g. AirPlay)
+#                 subprocess.run(f"sudo kill -9 {pid}", shell=True, check=True, capture_output=True)
+#             print(f"  Successfully killed processes on port {port} (macOS/Linux).")
+#             return True
+#         except subprocess.CalledProcessError as e:
+#             print(f"  Failed to kill processes on port {port}: {e.stderr.strip()}")
+#             print("  Make sure you have sudo privileges or manually kill it.")
+#             return False
+#         except Exception as e:
+#             print(f"  Unexpected error killing process on port {port} (macOS/Linux): {e}")
+#             return False
+
+# # --- Helper Function to run ADK web in background within Conda env ---
+# def _start_adk_web_in_background(conda_env_name, adk_port):
+#     print(f"Starting 'adk web' in background for environment '{conda_env_name}' on port {adk_port}...")
+    
+#     # Construct the command to activate conda env and run adk web
+#     # This is slightly different for different shells/OSes
+#     if platform.system() == "Windows":
+#         # On Windows, you typically need to call conda.bat
+#         conda_path = os.path.join(os.environ.get("CONDA_PREFIX", ""), "condabin", "conda.bat")
+#         # Ensure CONDA_PREFIX points to your base conda install, or explicitly set it
+#         if not os.path.exists(conda_path):
+#              # Fallback if CONDA_PREFIX isn't set for base or conda.bat is elsewhere
+#              conda_path = "conda" # Hope it's in PATH, or specify full path to your conda.bat
+#              print("Warning: Could not find conda.bat via CONDA_PREFIX. Relying on PATH.")
+
+#         # Command to activate env and run adk web
+#         cmd = f'{conda_path} activate {conda_env_name} && adk web --port {adk_port}'
+#         creationflags = subprocess.DETACHED_PROCESS # Detach process on Windows
+#         shell_arg = True
+#     else: # macOS and Linux
+#         # Use a non-interactive shell to source conda.sh and then run adk web
+#         # This is more robust than just 'conda activate' which might not work in subprocess
+#         conda_sh_path = os.path.join(os.environ.get("CONDA_PREFIX", ""), "etc", "profile.d", "conda.sh")
+#         # Fallback if CONDA_PREFIX isn't set for base or conda.sh is elsewhere
+#         if not os.path.exists(conda_sh_path):
+#             # Try to locate conda.sh, or assume 'conda' is in the PATH from shell init
+#             # If `conda` command isn't found in a clean subprocess, this needs to be fixed.
+#             print("Warning: Could not find conda.sh. Relying on shell's PATH for 'conda'.")
+#             cmd = f'conda activate {conda_env_name} && adk web --port {adk_port}'
+#         else:
+#             cmd = f'bash -c "source {conda_sh_path} && conda activate {conda_env_name} && adk web --port {adk_port}"'
+        
+#         creationflags = 0 # Not applicable to Linux/macOS in the same way
+#         shell_arg = True # Must use shell=True for `&&` or `source`
+
+#     try:
+#         # Use Popen to run in background and detach
+#         # stdout/stderr to DEVNULL prevents the subprocess from hanging if it tries to print
+#         process = subprocess.Popen(cmd, shell=shell_arg, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+#                                    stdin=subprocess.DEVNULL, close_fds=True, creationflags=creationflags)
+#         print(f"  'adk web' process started with PID: {process.pid}")
+#         return True
+#     except Exception as e:
+#         print(f"  Failed to start 'adk web': {e}")
+#         return False
+
+
+# ###################################
+
+# # --- Placeholder for your actual Gemini Agent Logic ---
+# def your_gemini_agent_logic(input_json_data, prompt):
+#     """
+#     This function simulates your custom Gemini agent processing.
+#     In a real application, you would replace this with your
+#     actual Gemini agent's interaction, which might involve:
+#     - Calling a Gemini API
+#     - Using a local ML model
+#     - Applying business rules based on the prompt
+
+#     Args:
+#         input_json_data (dict): The parsed JSON data from the input file.
+#         prompt (str): The prompt provided by the user.
+
+#     Returns:
+#         tuple: (updated_json_data (dict), context_of_changes (str))
+#     """
+#     updated_json_data = input_json_data.copy()
+#     context_of_changes = get_new_json(input_json_data, "root_agent", prompt)
+#     # TODO: need to take in param to edit
+
+#     # Example: Modify JSON based on a simple prompt
+#     if "add_timestamp" in prompt.lower():
+#         import datetime
+#         updated_json_data["last_updated"] = datetime.datetime.now().isoformat()
+#         context_of_changes += "- Added 'last_updated' timestamp.\n"
+
+#     if "change_status_to_processed" in prompt.lower():
+#         if "status" in updated_json_data:
+#             updated_json_data["status"] = "processed"
+#             context_of_changes += "- Changed 'status' to 'processed'.\n"
+#         else:
+#             updated_json_data["status"] = "newly_processed"
+#             context_of_changes += "- Added 'status' as 'newly_processed'.\n"
+
+#     if "add_notes" in prompt.lower() and "notes_content" in prompt.lower():
+#         # Extract notes content from prompt (a more robust solution would use regex or a more structured prompt)
+#         try:
+#             notes_start = prompt.find("notes_content:") + len("notes_content:")
+#             notes_end = prompt.find("'", notes_start) # Assuming notes_content ends with a single quote for simplicity
+#             if notes_end == -1: # if no closing quote found, take till end
+#                 notes_content = prompt[notes_start:].strip()
+#             else:
+#                 notes_content = prompt[notes_start:notes_end].strip()
+#             updated_json_data["notes"] = notes_content
+#             context_of_changes += f"- Added notes: '{notes_content}'.\n"
+#         except Exception as e:
+#             context_of_changes += f"- Failed to add notes due to error: {e}.\n"
+
+
+#     if not context_of_changes:
+#         context_of_changes = "No specific changes requested or applied based on the prompt."
+
+#     return updated_json_data, context_of_changes
+
+# # --- API Endpoint ---
+# @app.route('/process_json', methods=['POST'])
+# def process_json():
+#     if 'json_file' not in request.files:
+#         return jsonify({"error": "No JSON file part in the request"}), 400
+
+#     json_file = request.files['json_file']
+#     prompt = request.form.get('prompt')
+
+#     if json_file.filename == '':
+#         return jsonify({"error": "No selected JSON file"}), 400
+
+#     if not prompt:
+#         return jsonify({"error": "No prompt provided"}), 400
+
+#     if json_file:
+#         try:
+#             # Read the JSON file content
+#             json_data_str = json_file.read().decode('utf-8')
+#             input_json_data = json.loads(json_data_str)
+
+#             # --- Call your custom Gemini agent logic ---
+#             updated_json, context_of_changes = your_gemini_agent_logic(input_json_data, prompt)
+
+#             return jsonify({
+#                 "updated_json": updated_json,
+#                 "context_of_changes": context_of_changes
+#             }), 200
+
+#         except json.JSONDecodeError:
+#             return jsonify({"error": "Invalid JSON file format"}), 400
+#         except Exception as e:
+#             return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+#     else:
+#         return jsonify({"error": "An unexpected error occurred with the file upload"}), 500
+
+
+# # --- NEW API Endpoint 2: Retrigger ADK Web Server ---
+# @app.route('/retrigger_adk_web', methods=['POST'])
+# def retrigger_adk_web():
+#     print(f"Received request to retrigger ADK web server on port {ADK_WEB_PORT}.")
+
+#     # 1. Attempt to kill existing ADK web server process
+#     kill_success = _kill_process_on_port(ADK_WEB_PORT)
+#     if not kill_success:
+#         # This might be acceptable if no process was running, or if it failed but we want to try starting anyway
+#         print("  Warning: Failed to kill existing ADK web process, attempting restart anyway.")
+#         # return jsonify({"status": "error", "message": "Failed to stop existing ADK web server."}), 500
+    
+#     # Give a tiny moment for the port to free up if a process was just killed
+#     time.sleep(1) 
+
+#     # 2. Start new ADK web server process
+#     start_success = _start_adk_web_in_background(CONDA_ENV_NAME, ADK_WEB_PORT)
+
+#     if start_success:
+#         return jsonify({
+#             "status": "success",
+#             "message": f"Attempted to restart ADK web server on port {ADK_WEB_PORT}. Check ADK logs for status."
+#         }), 200
+#     else:
+#         return jsonify({
+#             "status": "error",
+#             "message": "Failed to start ADK web server. Check server logs for details."
+#         }), 500
+    
+# if __name__ == '__main__':
+#     # You can change the host and port as needed
+#     app.run(debug=True, host='0.0.0.0', port=5000)
+
 from flask import Flask, request, jsonify
 import json
-from werkzeug.utils import secure_filename
 import os
-from prompt import get_new_json
+import datetime # Used in your original your_gemini_agent_logic example
+import subprocess # For running shell commands
+import platform   # For detecting the operating system
+import time       # For small delays
+
+# Assuming 'prompt.py' exists and contains 'get_new_json'
+# from prompt import get_new_json
 
 app = Flask(__name__)
 
+# --- Configuration for ADK Web Server ---
+ADK_WEB_PORT = 8000  # Default port for 'adk web'. Adjust if yours is different.
+CONDA_ENV_NAME = "calhacks" # Your Conda environment name
+
 # --- Placeholder for your actual Gemini Agent Logic ---
+# Keep this if you're still using the /process_json endpoint as originally designed
 def your_gemini_agent_logic(input_json_data, prompt):
     """
     This function simulates your custom Gemini agent processing.
     In a real application, you would replace this with your
-    actual Gemini agent's interaction, which might involve:
-    - Calling a Gemini API
-    - Using a local ML model
-    - Applying business rules based on the prompt
-
-    Args:
-        input_json_data (dict): The parsed JSON data from the input file.
-        prompt (str): The prompt provided by the user.
-
-    Returns:
-        tuple: (updated_json_data (dict), context_of_changes (str))
+    actual Gemini agent's interaction.
     """
     updated_json_data = input_json_data.copy()
-    context_of_changes = get_new_json(input_json_data, "root_agent", prompt)
-    # TODO: need to take in param to edit
+    context_of_changes = "" # Initialize if get_new_json isn't available
 
-    # Example: Modify JSON based on a simple prompt
+    # If prompt.py and get_new_json are truly available:
+    # try:
+    #     context_of_changes = get_new_json(input_json_data, "root_agent", prompt)
+    # except Exception as e:
+    #     context_of_changes = f"Error calling get_new_json: {e}\n"
+
+
     if "add_timestamp" in prompt.lower():
-        import datetime
         updated_json_data["last_updated"] = datetime.datetime.now().isoformat()
         context_of_changes += "- Added 'last_updated' timestamp.\n"
 
@@ -42,11 +284,10 @@ def your_gemini_agent_logic(input_json_data, prompt):
             context_of_changes += "- Added 'status' as 'newly_processed'.\n"
 
     if "add_notes" in prompt.lower() and "notes_content" in prompt.lower():
-        # Extract notes content from prompt (a more robust solution would use regex or a more structured prompt)
         try:
             notes_start = prompt.find("notes_content:") + len("notes_content:")
-            notes_end = prompt.find("'", notes_start) # Assuming notes_content ends with a single quote for simplicity
-            if notes_end == -1: # if no closing quote found, take till end
+            notes_end = prompt.find("'", notes_start)
+            if notes_end == -1:
                 notes_content = prompt[notes_start:].strip()
             else:
                 notes_content = prompt[notes_start:notes_end].strip()
@@ -55,13 +296,110 @@ def your_gemini_agent_logic(input_json_data, prompt):
         except Exception as e:
             context_of_changes += f"- Failed to add notes due to error: {e}.\n"
 
-
     if not context_of_changes:
         context_of_changes = "No specific changes requested or applied based on the prompt."
 
     return updated_json_data, context_of_changes
 
-# --- API Endpoint ---
+
+# --- Helper Function to find and kill processes on a port ---
+def _kill_process_on_port(port):
+    print(f"Attempting to kill processes on port {port}...")
+    if platform.system() == "Windows":
+        print(f"  Platform: Windows")
+        try:
+            print(f"  Running netstat command...")
+            # subprocess.check_output returns bytes by default, so decode it.
+            output = subprocess.check_output(f"netstat -ano | findstr :{port}", shell=True).decode('utf-8')
+            print(f"  netstat output received. Parsing PIDs...")
+            pids = [line.strip().split()[-1] for line in output.splitlines() if line.strip()]
+            for pid in set(pids):
+                print(f"  Attempting to kill PID: {pid}")
+                # taskkill also returns bytes, decode stderr if an error occurs.
+                subprocess.run(f"taskkill /F /PID {pid}", shell=True, check=True, capture_output=True)
+            print(f"  Successfully killed processes on port {port} (Windows).")
+            return True
+        except subprocess.CalledProcessError as e:
+            # FIX: Check if e.stderr is None before decoding
+            error_output = "No stderr output captured." # Default message if stderr is None
+            if e.stderr is not None:
+                error_output = e.stderr.decode('utf-8', errors='ignore')
+            print(f"  Error running netstat/taskkill (Windows): {error_output.strip()}")
+            return False
+        except Exception as e:
+            print(f"  Unexpected error in _kill_process_on_port (Windows): {e}")
+            return False
+    else: # macOS and Linux
+        print(f"  Platform: macOS/Linux")
+        try:
+            print(f"  Running lsof command: sudo lsof -ti :{port}")
+            lsof_cmd = f"sudo lsof -ti :{port}"
+            # text=True captures stdout as a string. stderr will still be captured for CalledProcessError.
+            pids_output = subprocess.check_output(lsof_cmd, shell=True, text=True).strip()
+            print(f"  lsof output: '{pids_output}'")
+            if not pids_output:
+                print(f"  No process found on port {port}.")
+                return True # No process to kill is a success
+            
+            pids = pids_output.splitlines()
+            for pid in pids:
+                print(f"  Attempting to kill PID: {pid} with 'sudo kill -9 {pid}'")
+                # capture_output=True ensures stderr is captured as bytes.
+                subprocess.run(f"sudo kill -9 {pid}", shell=True, check=True, capture_output=True)
+            print(f"  Successfully killed processes on port {port} (macOS/Linux).")
+            return True
+        except subprocess.CalledProcessError as e:
+            # FIX: Check if e.stderr is None before decoding
+            error_output = "No stderr output captured." # Default message if stderr is None
+            if e.stderr is not None:
+                error_output = e.stderr.decode('utf-8', errors='ignore')
+            print(f"  Error running lsof/kill (macOS/Linux): {error_output.strip()}")
+            print("  This might be due to lack of sudo password or the command not being found.")
+            return False
+        except Exception as e:
+            print(f"  Unexpected error in _kill_process_on_port (macOS/Linux): {e}")
+            return False
+
+
+# --- Helper Function to run ADK web in background within Conda env ---
+def _start_adk_web_in_background(conda_env_name, adk_port):
+    print(f"Starting 'adk web' in background for environment '{conda_env_name}' on port {adk_port}...")
+    
+    # Construct the command to activate conda env and run adk web
+    if platform.system() == "Windows":
+        # On Windows, you typically need to call conda.bat
+        conda_path = os.path.join(os.environ.get("CONDA_PREFIX", ""), "condabin", "conda.bat")
+        if not os.path.exists(conda_path):
+             conda_path = "conda" # Fallback if CONDA_PREFIX isn't set for base or conda.bat is elsewhere
+             print("Warning: Could not find conda.bat via CONDA_PREFIX. Relying on PATH.")
+
+        cmd = f'"{conda_path}" activate {conda_env_name} && adk web --port {adk_port}'
+        creationflags = subprocess.DETACHED_PROCESS # Detach process on Windows
+        shell_arg = True
+    else: # macOS and Linux
+        # Use a non-interactive shell to source conda.sh and then run adk web
+        conda_sh_path = os.path.join(os.environ.get("CONDA_PREFIX", ""), "etc", "profile.d", "conda.sh")
+        if not os.path.exists(conda_sh_path):
+            print("Warning: Could not find conda.sh. Relying on shell's PATH for 'conda'.")
+            cmd = f'conda activate {conda_env_name} && adk web --port {adk_port}'
+        else:
+            cmd = f'bash -c "source {conda_sh_path} && conda activate {conda_env_name} && adk web --port {adk_port}"'
+        
+        creationflags = 0 # Not applicable to Linux/macOS in the same way
+        shell_arg = True # Must use shell=True for `&&` or `source`
+
+    try:
+        # Use Popen to run in background and detach
+        process = subprocess.Popen(cmd, shell=shell_arg, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+                                   stdin=subprocess.DEVNULL, close_fds=True, creationflags=creationflags)
+        print(f"  'adk web' process started with PID: {process.pid}")
+        return True
+    except Exception as e:
+        print(f"  Failed to start 'adk web': {e}")
+        return False
+
+
+# --- API Endpoint 1: Process JSON ---
 @app.route('/process_json', methods=['POST'])
 def process_json():
     if 'json_file' not in request.files:
@@ -97,6 +435,35 @@ def process_json():
     else:
         return jsonify({"error": "An unexpected error occurred with the file upload"}), 500
 
+
+# --- NEW API Endpoint 2: Retrigger ADK Web Server ---
+@app.route('/retrigger_adk_web', methods=['POST'])
+def retrigger_adk_web():
+    print(f"Received request to retrigger ADK web server on port {ADK_WEB_PORT}.")
+
+    # 1. Attempt to kill existing ADK web server process
+    kill_success = _kill_process_on_port(ADK_WEB_PORT)
+    if not kill_success:
+        print("  Warning: Failed to kill existing ADK web process, attempting restart anyway.")
+    
+    # Give a tiny moment for the port to free up if a process was just killed
+    time.sleep(1) 
+
+    # 2. Start new ADK web server process
+    start_success = _start_adk_web_in_background(CONDA_ENV_NAME, ADK_WEB_PORT)
+
+    if start_success:
+        return jsonify({
+            "status": "success",
+            "message": f"Attempted to restart ADK web server on port {ADK_WEB_PORT}. Check ADK logs for status."
+        }), 200
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Failed to start ADK web server. Check server logs for details."
+        }), 500
+
 if __name__ == '__main__':
-    # You can change the host and port as needed
+    # You can change the host and port for your Flask app as needed
+    # Ensure this port is DIFFERENT from ADK_WEB_PORT (e.g., 5000 for Flask, 8000 for ADK)
     app.run(debug=True, host='0.0.0.0', port=5000)
