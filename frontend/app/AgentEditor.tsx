@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface AgentEditorProps {
   selectedNode: string;
@@ -9,7 +10,12 @@ interface AgentEditorProps {
 
 const AgentEditor = ({ selectedNode, nodeJson }: AgentEditorProps) => {
   return (
-    <div className="p-6 bg-background/30">
+    <motion.div
+      className="p-6 bg-background/30"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.7 }}
+    >
       <div className="flex items-center gap-2 mb-4">
         <FileText className="h-4 w-4 text-muted-foreground" />
         <h2 className="text-sm font-semibold text-foreground">
@@ -27,7 +33,7 @@ const AgentEditor = ({ selectedNode, nodeJson }: AgentEditorProps) => {
           </code>
         </pre>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

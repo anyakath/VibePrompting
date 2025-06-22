@@ -6,6 +6,7 @@ import { OrgChartNode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { TreeNodeDatum } from "react-d3-tree";
 import { cn, truncateText } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
 
@@ -33,11 +34,14 @@ const renderCustomNode = ({
     <g>
       {/* Glow effect for selected node */}
       {isSelected && (
-        <circle
+        <motion.circle
           r={22}
           fill="url(#selectedGlow)"
-          opacity="0.3"
+          opacity={0.3}
           filter="url(#glow)"
+          initial={{ scale: 1, opacity: 0.3 }}
+          animate={{ scale: [1, 1.08, 1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 1.6, repeat: Infinity }}
         />
       )}
 
@@ -60,7 +64,7 @@ const renderCustomNode = ({
       </text>
 
       {/* Main node circle with gradient */}
-      <circle
+      <motion.circle
         r={16}
         fill={isSelected ? "url(#selectedGradient)" : "url(#defaultGradient)"}
         strokeWidth={isSelected ? 3 : 2}
@@ -68,6 +72,9 @@ const renderCustomNode = ({
         onClick={onNodeClick}
         className="cursor-pointer transition-all duration-300 hover:r-18"
         filter={isSelected ? "url(#shadow)" : "none"}
+        initial={isSelected ? { scale: 0.95 } : { scale: 1 }}
+        animate={isSelected ? { scale: [0.95, 1.05, 1] } : { scale: 1 }}
+        transition={isSelected ? { duration: 1.2, repeat: Infinity } : {}}
       />
 
       {/* Hover effect indicator */}
