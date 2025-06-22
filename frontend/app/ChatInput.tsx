@@ -4,13 +4,6 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface ChatInputProps {
   selectedNode: string;
@@ -24,7 +17,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isProcessing = false,
 }) => {
   const [inputValue, setInputValue] = useState("");
-  const [selectedOption, setSelectedOption] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +26,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="p-6 bg-transparent" style={{ backgroundColor: "transparent !important", background: "transparent !important" }}>
+    <div
+      className="p-6 bg-transparent"
+      style={{
+        backgroundColor: "transparent !important",
+        background: "transparent !important",
+      }}
+    >
       <div className="mb-3">
         <h3 className="text-sm font-medium text-foreground">
           Generate New Prompts

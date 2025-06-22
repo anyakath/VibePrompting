@@ -227,9 +227,15 @@ export default function AppPage() {
                 >
                   <History
                     orgChart={orgChart}
+                    setOrgChart={setOrgChart}
                     selectedNode={selectedNode}
                     setSelectedNode={setSelectedNode}
                     isLogsOpen={isLogsOpen}
+                    sessionId={sessionId}
+                    nodeCounter={nodeCounter}
+                    setNodeCounter={setNodeCounter}
+                    messages={messages}
+                    setMessages={setMessages}
                   />
                 </motion.div>
               </Panel>

@@ -129,3 +129,10 @@ def summarize_changes(prompt, context_of_changes=None):
         if line:
             return ' '.join(line.split()[:6])
     return ' '.join(prompt.strip().split()[:6])
+
+
+def rl_prompt(query, output):
+    return f"""
+    Given the following query: {query}, the agent produced the following output: {output}.
+    Given this information, iterate upon the system prompts of the agent (the steps that the agent takes), to improve the output for this given use-case. Try to keep changes relatively minimal.
+    """

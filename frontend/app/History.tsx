@@ -5,17 +5,25 @@ import dynamic from "next/dynamic";
 import { OrgChartNode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { TreeNodeDatum } from "react-d3-tree";
-import { cn, truncateText } from "@/lib/utils";
+import { cn, truncateText, addChildToNodeByName } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
+import AgentContent from "@/lib/agent.json";
+import { Message } from "@/lib/types";
 
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
 
 interface HistoryProps {
   orgChart: OrgChartNode;
+  setOrgChart: React.Dispatch<React.SetStateAction<OrgChartNode>>;
   selectedNode: string;
   setSelectedNode: React.Dispatch<React.SetStateAction<string>>;
   isLogsOpen: boolean;
+  sessionId: string | null;
+  nodeCounter: number;
+  setNodeCounter: React.Dispatch<React.SetStateAction<number>>;
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
 interface CustomNodeElementProps {
@@ -90,12 +98,17 @@ const renderCustomNode = ({
   );
 };
 
-const History: React.FC<HistoryProps> = ({
+function History({
   orgChart,
+  setOrgChart,
   selectedNode,
   setSelectedNode,
   isLogsOpen,
-}) => {
+  sessionId,
+  nodeCounter,
+  setNodeCounter,
+  setMessages,
+}: HistoryProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isAgentRunning, setIsAgentRunning] = useState(false);
   const [trainQuery, setTrainQuery] = useState("");
@@ -183,30 +196,98 @@ const History: React.FC<HistoryProps> = ({
   };
 
   const handleTrainAgent = async () => {
-    if (isTraining || !trainQuery.trim() || !trainIterations) return;
-
+    if (isTraining || !trainQuery.trim() || !trainIterations || !sessionId)
+      return;
     setIsTraining(true);
-
     try {
-      // Here you would implement the actual training logic
-      // For now, we'll just simulate a training process
-      console.log(
-        `Training agent with query: "${trainQuery}" for ${trainIterations} iterations`
-      );
-
-      // Simulate training delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // You could add actual API call here:
-      // const response = await fetch("http://localhost:5000/train_agent", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ query: trainQuery, iterations: parseInt(trainIterations) })
-      // });
-
+      const iterations = parseInt(trainIterations, 10);
+      let currentSelectedNode = selectedNode;
+      let currentNodeCounter = nodeCounter;
+      for (let i = 0; i < iterations; i++) {
+        // 1. Call RL endpoint
+        const rlRes = await fetch("http://localhost:5000/rl", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: trainQuery }),
+        });
+        if (!rlRes.ok) {
+          throw new Error(`RL step failed at iteration ${i + 1}`);
+        }
+        // 2. Get base JSON for the node (from orgChart or AgentContent)
+        let baseJsonData = AgentContent as Record<string, unknown>;
+        // Find the selected node in the org chart
+        function findNodeByName(
+          node: OrgChartNode,
+          name: string
+        ): OrgChartNode | null {
+          if (node.name === name) return node;
+          for (const child of node.children || []) {
+            const found = findNodeByName(child, name);
+            if (found) return found;
+          }
+          return null;
+        }
+        const selectedNodeData = findNodeByName(orgChart, currentSelectedNode);
+        if (selectedNodeData && selectedNodeData.jsonData) {
+          baseJsonData = selectedNodeData.jsonData;
+        }
+        // 3. Call process_json/general to create a new node
+        const blob = new Blob([JSON.stringify(baseJsonData)], {
+          type: "application/json",
+        });
+        const formData = new FormData();
+        formData.append("json_file", blob, "agent.json");
+        formData.append("prompt", trainQuery.trim());
+        const newNodeId = currentNodeCounter.toString();
+        const response = await fetch(
+          `http://localhost:5000/process_json/general/${sessionId}/${newNodeId}`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        const result = await response.json();
+        if (!response.ok)
+          throw new Error(result.error || "Failed to process prompt");
+        setOrgChart((prevChart) => {
+          return addChildToNodeByName(
+            prevChart,
+            currentSelectedNode,
+            result.node_name || trainQuery.trim(),
+            newNodeId,
+            undefined,
+            result.updated_json ? JSON.parse(result.updated_json) : result
+          );
+        });
+        // Update selected node and node counter for next iteration
+        currentSelectedNode = result.node_name || trainQuery.trim();
+        setSelectedNode(currentSelectedNode);
+        currentNodeCounter++;
+        setNodeCounter(currentNodeCounter);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            content: `Node "${
+              result.node_name || trainQuery.trim()
+            }" added with ID: ${newNodeId}`,
+            sender: "system",
+          },
+        ]);
+      }
       console.log("Training completed successfully");
     } catch (error) {
       console.error("Error training agent:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          content: `Error during training: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+          sender: "system",
+        },
+      ]);
     } finally {
       setIsTraining(false);
     }
@@ -495,6 +576,6 @@ const History: React.FC<HistoryProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default History;
