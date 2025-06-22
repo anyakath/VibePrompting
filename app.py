@@ -143,44 +143,9 @@ def call_single_edit_agent(input_json_data, prompt, param='root_agent'):
     return updated_json_data, context_of_changes
 
 def call_general_agent(input_json_data, prompt):
-    """
-    This function simulates your custom Gemini agent processing.
-    In a real application, you would replace this with your
-    actual Gemini agent's interaction.
-    """
-    updated_json_data = input_json_data.copy()
-    _, changelog = get_new_json_general(input_json_data, prompt)
+    updated_json_str, changelog = get_new_json_general(input_json_data, prompt)
+    updated_json_data = json.loads(updated_json_str)
     context_of_changes = changelog
-
-    # Example: Modify JSON based on a simple prompt
-    if "add_timestamp" in prompt.lower():
-        updated_json_data["last_updated"] = datetime.datetime.now().isoformat()
-        context_of_changes = (context_of_changes or "") + "- Added 'last_updated' timestamp.\n"
-
-    if "change_status_to_processed" in prompt.lower():
-        if "status" in updated_json_data:
-            updated_json_data["status"] = "processed"
-            context_of_changes = (context_of_changes or "") + "- Changed 'status' to 'processed'.\n"
-        else:
-            updated_json_data["status"] = "newly_processed"
-            context_of_changes = (context_of_changes or "") + "- Added 'status' as 'newly_processed'.\n"
-
-    if "add_notes" in prompt.lower() and "notes_content" in prompt.lower():
-        try:
-            notes_start = prompt.find("notes_content:") + len("notes_content:")
-            notes_end = prompt.find("'", notes_start)
-            if notes_end == -1:
-                notes_content = prompt[notes_start:].strip()
-            else:
-                notes_content = prompt[notes_start:notes_end].strip()
-            updated_json_data["notes"] = notes_content
-            context_of_changes = (context_of_changes or "") + f"- Added notes: '{notes_content}'.\n"
-        except Exception as e:
-            context_of_changes = (context_of_changes or "") + f"- Failed to add notes due to error: {e}.\n"
-
-    if not context_of_changes:
-        context_of_changes = "No specific changes requested or applied based on the prompt."
-
     return updated_json_data, context_of_changes
 
 
