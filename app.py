@@ -8,6 +8,7 @@ import platform   # For detecting the operating system
 import time       # For small delays
 import zipfile    # For handling ZIP files
 import shutil     # For file operations
+import uuid
 
 from prompt import get_new_json_single_edit, get_new_json_general, summarize_changes
 
@@ -34,7 +35,7 @@ def upload_agent():
         return jsonify({"error": "No ZIP file part in the request"}), 400
 
     zip_file = request.files['agent_zip']
-    
+
     if zip_file.filename == '':
         return jsonify({"error": "No selected ZIP file"}), 400
 
@@ -43,14 +44,13 @@ def upload_agent():
 
     try:
         # Create a unique directory name for this upload in root directory
-        import uuid
         upload_id = str(uuid.uuid4())
         upload_path = os.path.join(os.getcwd(), upload_id)
-        
+
         # Delete existing folder if it exists
         if os.path.exists(upload_path):
             shutil.rmtree(upload_path)
-        
+
         # Create the directory
         os.makedirs(upload_path, exist_ok=True)
 
@@ -143,44 +143,9 @@ def call_single_edit_agent(input_json_data, prompt, param='root_agent'):
     return updated_json_data, context_of_changes
 
 def call_general_agent(input_json_data, prompt):
-    """
-    This function simulates your custom Gemini agent processing.
-    In a real application, you would replace this with your
-    actual Gemini agent's interaction.
-    """
-    updated_json_data = input_json_data.copy()
-    _, changelog = get_new_json_general(input_json_data, prompt)
+    updated_json_str, changelog = get_new_json_general(input_json_data, prompt)
+    updated_json_data = json.loads(updated_json_str)
     context_of_changes = changelog
-
-    # Example: Modify JSON based on a simple prompt
-    if "add_timestamp" in prompt.lower():
-        updated_json_data["last_updated"] = datetime.datetime.now().isoformat()
-        context_of_changes = (context_of_changes or "") + "- Added 'last_updated' timestamp.\n"
-
-    if "change_status_to_processed" in prompt.lower():
-        if "status" in updated_json_data:
-            updated_json_data["status"] = "processed"
-            context_of_changes = (context_of_changes or "") + "- Changed 'status' to 'processed'.\n"
-        else:
-            updated_json_data["status"] = "newly_processed"
-            context_of_changes = (context_of_changes or "") + "- Added 'status' as 'newly_processed'.\n"
-
-    if "add_notes" in prompt.lower() and "notes_content" in prompt.lower():
-        try:
-            notes_start = prompt.find("notes_content:") + len("notes_content:")
-            notes_end = prompt.find("'", notes_start)
-            if notes_end == -1:
-                notes_content = prompt[notes_start:].strip()
-            else:
-                notes_content = prompt[notes_start:notes_end].strip()
-            updated_json_data["notes"] = notes_content
-            context_of_changes = (context_of_changes or "") + f"- Added notes: '{notes_content}'.\n"
-        except Exception as e:
-            context_of_changes = (context_of_changes or "") + f"- Failed to add notes due to error: {e}.\n"
-
-    if not context_of_changes:
-        context_of_changes = "No specific changes requested or applied based on the prompt."
-
     return updated_json_data, context_of_changes
 
 
@@ -268,8 +233,8 @@ def _start_adk_web_in_background(adk_port):
 
 
 # --- API Endpoint 1: Process JSON Single Edit ---
-@app.route('/process_json/single_edit/<id>', methods=['POST'])
-def process_json_single_edit(id):
+@app.route('/process_json/single_edit/<session_id>/<node_id>', methods=['POST'])
+def process_json_single_edit(session_id, node_id):
     if 'json_file' not in request.files:
         return jsonify({"error": "No JSON file part in the request"}), 400
 
@@ -292,13 +257,13 @@ def process_json_single_edit(id):
             # --- Call your custom Gemini agent logic for single edit ---
             updated_json, context_of_changes = call_single_edit_agent(input_json_data, prompt, param)
 
-            # Create history directory if it doesn't exist
-            history_dir = "history"
-            if not os.path.exists(history_dir):
-                os.makedirs(history_dir)
+            # Create session history directory if it doesn't exist
+            session_dir = os.path.join('history', session_id)
+            if not os.path.exists(session_dir):
+                os.makedirs(session_dir)
 
-            # Save the updated JSON to a file
-            file_path = os.path.join(history_dir, f"{id}.json")
+            # Save the updated JSON to a file as <node_id>.json
+            file_path = os.path.join(session_dir, f"{node_id}.json")
             with open(file_path, 'w') as f:
                 json.dump(updated_json, f, indent=2)
 
@@ -319,8 +284,8 @@ def process_json_single_edit(id):
         return jsonify({"error": "An unexpected error occurred with the file upload"}), 500
 
 # --- API Endpoint 2: Process JSON General ---
-@app.route('/process_json/general/<id>', methods=['POST'])
-def process_json_general(id):
+@app.route('/process_json/general/<session_id>/<node_id>', methods=['POST'])
+def process_json_general(session_id, node_id):
     if 'json_file' not in request.files:
         return jsonify({"error": "No JSON file part in the request"}), 400
 
@@ -342,13 +307,13 @@ def process_json_general(id):
             # --- Call your custom Gemini agent logic for general ---
             updated_json, context_of_changes = call_general_agent(input_json_data, prompt)
 
-            # Create history directory if it doesn't exist
-            history_dir = "history"
-            if not os.path.exists(history_dir):
-                os.makedirs(history_dir)
+            # Create session history directory if it doesn't exist
+            session_dir = os.path.join('history', session_id)
+            if not os.path.exists(session_dir):
+                os.makedirs(session_dir)
 
-            # Save the updated JSON to a file
-            file_path = os.path.join(history_dir, f"{id}.json")
+            # Save the updated JSON to a file as <node_id>.json
+            file_path = os.path.join(session_dir, f"{node_id}.json")
             with open(file_path, 'w') as f:
                 json.dump(updated_json, f, indent=2)
 
@@ -368,22 +333,21 @@ def process_json_general(id):
     else:
         return jsonify({"error": "An unexpected error occurred with the file upload"}), 500
 
-# --- API Endpoint 3: Get History ---
-@app.route('/history/<id>', methods=['GET'])
-def get_history(id):
-    history_dir = "history"
-    file_path = os.path.join(history_dir, f"{id}.json")
+# --- API Endpoint 3: Get Node JSON in Session ---
+@app.route('/history/<session_id>/<node_id>', methods=['GET'])
+def get_node_json(session_id, node_id):
+    session_dir = os.path.join('history', session_id)
+    file_path = os.path.join(session_dir, f"{node_id}.json")
 
     if not os.path.exists(file_path):
-        return jsonify({"error": "History not found for the given ID"}), 404
+        return jsonify({"error": "Node JSON not found for the given session and node ID"}), 404
 
     try:
         with open(file_path, 'r') as f:
             data = json.load(f)
         return jsonify(data)
     except Exception as e:
-        return jsonify({"error": f"An error occurred while reading the history file: {str(e)}"}), 500
-
+        return jsonify({"error": f"An error occurred while reading the node JSON file: {str(e)}"}), 500
 
 # --- API Endpoint 4: Retrigger ADK Web Server ---
 @app.route('/retrigger_adk_web', methods=['POST'])
@@ -411,6 +375,16 @@ def retrigger_adk_web():
             "status": "error",
             "message": "Failed to start ADK web server. Check server logs for details."
         }), 500
+
+@app.route('/new_session', methods=['POST'])
+def new_session():
+    """
+    Create a new session directory under history/ with a random id and return the id.
+    """
+    session_id = str(uuid.uuid4())
+    session_dir = os.path.join('history', session_id)
+    os.makedirs(session_dir, exist_ok=True)
+    return jsonify({"session_id": session_id}), 200
 
 if __name__ == '__main__':
     # You can change the host and port for your Flask app as needed

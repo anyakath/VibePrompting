@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Logs from "@/app/Logs";
 import History from "@/app/History";
 import { Message, OrgChartNode } from "@/lib/types";
 import AgentEditor from "@/app/AgentEditor";
 import { Button } from "@/components/ui/button";
-import { addChildToNodeByName, findNodeByName, generateNodeId } from "@/lib/utils";
+import { addChildToNodeByName, findNodeByName } from "@/lib/utils";
 import ChatInput from "@/app/ChatInput";
 import {
   Panel,
@@ -16,6 +16,7 @@ import {
 } from "react-resizable-panels";
 import AgentContent from "@/lib/agent.json";
 import { Home, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AppPage() {
   const [orgChart, setOrgChart] = useState<OrgChartNode>({
@@ -29,7 +30,47 @@ export default function AppPage() {
   const [isLogsOpen, setIsLogsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [nodeCounter, setNodeCounter] = useState<number>(1); // Start at 1 for first node
+  const [selectedNodeJson, setSelectedNodeJson] =
+    useState<object>(AgentContent);
   const logsPanelRef = useRef<ImperativePanelHandle>(null);
+  const [showOverlay, setShowOverlay] = useState(true);
+
+  // On mount, create a new session
+  useEffect(() => {
+    const createSession = async () => {
+      const res = await fetch("http://localhost:5000/new_session", {
+        method: "POST",
+      });
+      const data = await res.json();
+      setSessionId(data.session_id);
+    };
+    createSession();
+  }, []);
+
+  // Fetch JSON for selected node when it changes
+  useEffect(() => {
+    if (!sessionId) return;
+    const nodeData = findNodeByName(orgChart, selectedNode);
+    if (!nodeData || !nodeData.id) return;
+    // Don't fetch for root node
+    if (nodeData.id === "root_node") {
+      setSelectedNodeJson(AgentContent);
+      return;
+    }
+    fetch(`http://localhost:5000/history/${sessionId}/${nodeData.id}`)
+      .then((res) => res.json())
+      .then((data) => setSelectedNodeJson(data))
+      .catch(() => setSelectedNodeJson({ error: "Failed to load JSON" }));
+  }, [selectedNode, sessionId, orgChart]);
+
+  useEffect(() => {
+    if (showOverlay) {
+      const timeout = setTimeout(() => setShowOverlay(false), 600);
+      return () => clearTimeout(timeout);
+    }
+  }, [showOverlay]);
 
   const expandLogs = () => {
     logsPanelRef.current?.expand();
@@ -40,84 +81,55 @@ export default function AppPage() {
   };
 
   const handleAddNode = async (inputValue: string) => {
-    if (!inputValue.trim()) return;
-
+    if (!inputValue.trim() || !sessionId) return;
     setIsProcessing(true);
-
-    // Find the selected node to get its JSON data
     const selectedNodeData = findNodeByName(orgChart, selectedNode);
     if (!selectedNodeData) {
-      console.error("Selected node not found");
       setIsProcessing(false);
       return;
     }
-
-    // Use the selected node's JSON data as the base, or fall back to AgentContent
     const baseJsonData = selectedNodeData.jsonData || AgentContent;
-
-    // Create a Blob from the JSON data
     const blob = new Blob([JSON.stringify(baseJsonData)], {
       type: "application/json",
     });
-
-    // Create FormData for file upload
     const formData = new FormData();
     formData.append("json_file", blob, "agent.json");
     formData.append("prompt", inputValue.trim());
-
+    const newNodeId = nodeCounter.toString();
     try {
-      // Make API call to Flask backend with file upload
-      const response = await fetch(`http://localhost:5000/process_json/general/${inputValue}`, {
-        method: "POST",
-        body: formData,
-      });
-
+      const response = await fetch(
+        `http://localhost:5000/process_json/general/${sessionId}/${newNodeId}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       const result = await response.json();
-
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(result.error || "Failed to process prompt");
-      }
-
-      // Generate unique ID for the new node
-      const newNodeId = generateNodeId();
-
-      // Check if this is the first child before updating the chart
-      const targetNode = findNodeByName(orgChart, selectedNode);
-      const isFirstChild = targetNode && targetNode.children.length === 0;
-
-      // Add a message for the successful API call
-      const messageContent = isFirstChild
-        ? `Child node "${inputValue.trim()}" added with ID: ${newNodeId}`
-        : `Branch created and child node "${inputValue.trim()}" added with ID: ${newNodeId}`;
-
+      setOrgChart((prevChart) => {
+        return addChildToNodeByName(
+          prevChart,
+          selectedNode,
+          result.node_name || inputValue.trim(),
+          newNodeId,
+          undefined,
+          result.updated_json ? JSON.parse(result.updated_json) : result
+        );
+      });
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
-          content: messageContent,
+          content: `Node \"${
+            result.node_name || inputValue.trim()
+          }\" added with ID: ${newNodeId}`,
           sender: "system",
         },
       ]);
-
-      // Store the generated JSON data from the API response
-      const generatedJsonData = result.json_data || result;
-
-      setOrgChart((prevChart) => {
-        return addChildToNodeByName(
-          prevChart, 
-          selectedNode, 
-          inputValue.trim(), 
-          newNodeId,
-          undefined,
-          generatedJsonData
-        );
-      });
-
-      setSelectedNode(inputValue.trim());
+      setSelectedNode(result.node_name || inputValue.trim());
+      setNodeCounter((n) => n + 1);
     } catch (error) {
-      console.error("Error processing prompt:", error);
-
-      // Add error message to logs
       setMessages((prev) => [
         ...prev,
         {
@@ -135,17 +147,28 @@ export default function AppPage() {
 
   return (
     <div className="h-screen w-full relative bg-background">
+      {/* Fade-in white overlay */}
+      {showOverlay && (
+        <motion.div
+          className="fixed inset-0 z-50 bg-white"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+        />
+      )}
+
       {/* Navigation Header */}
       <div className="absolute top-0 left-0 right-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center space-x-2">
             <Sparkles className="w-5 h-5 text-green-600" />
             <span className="font-semibold text-lg">VibePrompting</span>
+            <p>{sessionId}</p>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => window.location.href = '/'}
+            onClick={() => (window.location.href = "/")}
             className="flex items-center space-x-2"
           >
             <Home className="w-4 h-4" />
@@ -182,7 +205,10 @@ export default function AppPage() {
               <Panel defaultSize={35} minSize={20} collapsible>
                 <div className="h-full bg-card/50">
                   <div className="h-full overflow-auto scrollbar-thin">
-                    <AgentEditor orgChart={orgChart} selectedNode={selectedNode} />
+                    <AgentEditor
+                      selectedNode={selectedNode}
+                      nodeJson={selectedNodeJson}
+                    />
                   </div>
                 </div>
               </Panel>
@@ -221,4 +247,4 @@ export default function AppPage() {
       </div>
     </div>
   );
-} 
+}
