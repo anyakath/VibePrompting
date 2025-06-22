@@ -6,11 +6,18 @@ import datetime # Used in your original your_gemini_agent_logic example
 import subprocess # For running shell commands
 import platform   # For detecting the operating system
 import time       # For small delays
+import zipfile    # For handling ZIP files
+import shutil     # For file operations
 
 from prompt import get_new_json_single_edit, get_new_json_general
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+# Create uploads directory if it doesn't exist
+UPLOADS_DIR = "uploads"
+if not os.path.exists(UPLOADS_DIR):
+    os.makedirs(UPLOADS_DIR)
 
 @app.after_request
 def after_request(response):
@@ -19,6 +26,64 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
+
+# --- Upload Agent ZIP File Endpoint ---
+@app.route('/upload_agent', methods=['POST'])
+def upload_agent():
+    if 'agent_zip' not in request.files:
+        return jsonify({"error": "No ZIP file part in the request"}), 400
+
+    zip_file = request.files['agent_zip']
+    
+    if zip_file.filename == '':
+        return jsonify({"error": "No selected ZIP file"}), 400
+
+    if not zip_file.filename.endswith('.zip'):
+        return jsonify({"error": "File must be a ZIP archive"}), 400
+
+    try:
+        # Create a unique directory name for this upload in root directory
+        import uuid
+        upload_id = str(uuid.uuid4())
+        upload_path = os.path.join(os.getcwd(), upload_id)
+        
+        # Delete existing folder if it exists
+        if os.path.exists(upload_path):
+            shutil.rmtree(upload_path)
+        
+        # Create the directory
+        os.makedirs(upload_path, exist_ok=True)
+
+        # Save the ZIP file temporarily
+        zip_path = os.path.join(upload_path, zip_file.filename)
+        zip_file.save(zip_path)
+
+        # Extract the ZIP file
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(upload_path)
+
+        # Remove the ZIP file after extraction
+        os.remove(zip_path)
+
+        # Look for agent.json or similar files in the extracted content
+        agent_files = []
+        for root, dirs, files in os.walk(upload_path):
+            for file in files:
+                if file.endswith('.json') and ('agent' in file.lower() or 'config' in file.lower()):
+                    agent_files.append(os.path.join(root, file))
+
+        return jsonify({
+            "success": True,
+            "message": f"Agent uploaded successfully: {zip_file.filename}",
+            "upload_id": upload_id,
+            "agent_files": agent_files,
+            "extracted_path": upload_path
+        }), 200
+
+    except zipfile.BadZipFile:
+        return jsonify({"error": "Invalid ZIP file format"}), 400
+    except Exception as e:
+        return jsonify({"error": f"An error occurred during upload: {str(e)}"}), 500
 
 # --- Configuration for ADK Web Server ---
 ADK_WEB_PORT = 8000  # Default port for 'adk web'. Adjust if yours is different.
