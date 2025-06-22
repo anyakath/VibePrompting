@@ -13,16 +13,15 @@ def get_response(prompt):
         model="gemini-2.0-flash", contents=prompt
     ).text
 
-def generate_prompt(json, param, instruction):
+def generate_prompt_single_edit(json, param, instruction):
     prompt = f"""
-    You are an expert prompt engineer. You are given the following JSON:
+    You are an expert prompt engineer. You are given a JSON file that defines prompts for an AI agent and its tools. Read the JSON file carefully to understand what the AI agent is supposed to achieve. This is the JSON file:
 
     {json}
 
-    Your task is:
+    Your task is to improve the workflow of this AI agent by editing the value of "{param}", following this instruction from the user: {instruction}.
 
-    Only update the value of "{param}" based on this instruction:
-    {instruction}
+    Guidelines:
 
     Do not modify any other lines, spacing, indentation, or trailing commas in the JSON.
 
@@ -35,8 +34,40 @@ def generate_prompt(json, param, instruction):
 
     return prompt
 
-def get_new_json(input_json, param, instruction):
-    prompt = generate_prompt(str(input_json), param, instruction)
+def generate_prompt_general(json, instruction):
+    prompt = f"""
+    You are an expert prompt engineer. You are given a JSON file that defines prompts for an AI agent and its tools. Read the JSON file carefully to understand what the AI agent is supposed to achieve. This is the JSON file:
+
+    {json}
+
+    Your task is to improve the workflow of this AI agent by editing the JSON file, following this instruction from the user: {instruction}.
+
+    Guidelines:
+
+    Make only minimal, targeted changes necessary to follow the instruction.
+
+    Do not modify spacing, indentation, or trailing commas in the JSON.
+
+    Do not reorder keys or change formatting.
+
+    Do not add or remove any fields.
+
+    Do not reformat the JSON or adjust quotes.
+
+    Return the entire JSON.
+    """
+
+    return prompt
+
+def get_new_json_single_edit(input_json, param, instruction):
+    prompt = generate_prompt_single_edit(str(input_json), param, instruction)
+    response = get_response(prompt)
+    response_lines = response.split('\n')[1:-1] 
+    # don't use first and last line, which contains ```json and ```
+    return '\n'.join(response_lines)
+
+def get_new_json_general(input_json, param, instruction):
+    prompt = generate_prompt_general(str(input_json), param, instruction)
     response = get_response(prompt)
     response_lines = response.split('\n')[1:-1] 
     # don't use first and last line, which contains ```json and ```
