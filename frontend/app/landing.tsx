@@ -72,7 +72,7 @@ export default function LandingPage() {
                 variant="ghost"
                 size="sm"
                 onClick={openFileDialog}
-                className="flex items-center space-x-2 hover:bg-accent/50"
+                className="flex items-center space-x-0 hover:bg-accent/50"
               >
                 <span>Upload Agent</span>
                 <ArrowRight className="w-4 h-4" />
